@@ -1,0 +1,44 @@
+name: Generate Index File
+on:
+  push:
+    paths:
+      - 'public/tools/**'  # Trigger when files in this folder change
+jobs:
+  generate-index:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Generate index file
+        run: |
+          # Navigate to your folder
+          cd public/tools/
+          
+          # Start JSON array
+          echo "[" > index.json
+          
+          # List all files (excluding index.json itself)
+          first=true
+          for file in *; do
+            if [ "$file" != "index.json" ] && [ -f "$file" ]; then
+              if [ "$first" = true ]; then
+                first=false
+              else
+                echo "," >> index.json
+              fi
+              echo -n "  \"$file\"" >> index.json
+            fi
+          done
+          
+          # Close JSON array
+          echo "" >> index.json
+          echo "]" >> index.json
+          
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add public/tools/index.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update index file" && git push)
