@@ -1,13 +1,10 @@
 name: Generate Index File
-
 on:
   push:
     paths:
       - 'public/tools/**'  # Trigger when files in this folder change
-
 permissions:
   contents: write  # Required to push changes back to repo
-
 jobs:
   generate-index:
     runs-on: ubuntu-latest
@@ -23,8 +20,17 @@ jobs:
           # Navigate to your folder
           cd public/tools/
           
-          # Start JSON array
-          echo "[" > index.json
+          # Get current UTC datetime
+          DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          # Get git commit count as version number
+          VERSION=$(git rev-list --count HEAD)
+          
+          # Start JSON object
+          echo "{" > index.json
+          echo "  \"version\": $VERSION," >> index.json
+          echo "  \"lastUpdated\": \"$DATETIME\"," >> index.json
+          echo "  \"tools\": [" >> index.json
           
           # List all files (excluding index.json itself)
           first=true
@@ -35,17 +41,18 @@ jobs:
               else
                 echo "," >> index.json
               fi
-              echo -n "  \"$file\"" >> index.json
+              echo -n "    \"$file\"" >> index.json
             fi
           done
           
-          # Close JSON array
+          # Close JSON structure
           echo "" >> index.json
-          echo "]" >> index.json
+          echo "  ]" >> index.json
+          echo "}" >> index.json
           
       - name: Commit and push if changed
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add public/tools/index.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update index file" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update index file [v$(git rev-list --count HEAD)]" && git push)
