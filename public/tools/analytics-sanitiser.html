@@ -277,6 +277,10 @@
                 <span class="stat-value" id="fileName">-</span>
             </div>
             <div class="stat-item">
+                <span class="stat-label">File Size:</span>
+                <span class="stat-value" id="fileSize">-</span>
+            </div>
+            <div class="stat-item">
                 <span class="stat-label">Total Lines:</span>
                 <span class="stat-value" id="totalLines">-</span>
             </div>
@@ -397,13 +401,14 @@
             
             reader.onload = function(e) {
                 const content = e.target.result;
-                sanitizeFile(content, file.name);
+                const originalSize = file.size;
+                sanitizeFile(content, file.name, originalSize);
             };
 
             reader.readAsText(file);
         }
 
-        function sanitizeFile(content, fileName) {
+        function sanitizeFile(content, fileName, originalSize) {
             const lines = content.split('\n');
             const patternString = patternInput.value.trim();
             const useRegex = regexToggle.checked;
@@ -461,15 +466,28 @@
                 return;
             }
 
+            // Calculate sanitized content size
+            const sanitizedContent = sanitizedLines.join('\n');
+            const sanitizedSize = new Blob([sanitizedContent]).size;
+
+            // Format file sizes
+            const formatSize = (bytes) => {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            };
+
+            const sizeText = `${formatSize(originalSize)} → ${formatSize(sanitizedSize)}`;
+
             // Update statistics
             document.getElementById('fileName').textContent = fileName;
+            document.getElementById('fileSize').textContent = sizeText;
             document.getElementById('totalLines').textContent = lines.length;
             document.getElementById('eventsFound').textContent = totalMatchingLines;
             document.getElementById('duplicatesRemoved').textContent = duplicatesRemoved;
             document.getElementById('uniqueEvents').textContent = sanitizedLines.length;
 
             // Download sanitized file
-            const sanitizedContent = sanitizedLines.join('\n');
             const baseName = fileName.replace('.txt', '');
             const outputFileName = `${baseName}-sanitised.txt`;
             downloadFile(sanitizedContent, outputFileName);
