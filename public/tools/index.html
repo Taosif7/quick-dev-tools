@@ -173,9 +173,6 @@
         <footer id="footer" style="display: none;">
             <div class="footer-info">
                 <div class="footer-item">
-                    <span>📦 Version <span id="version">-</span></span>
-                </div>
-                <div class="footer-item">
                     <span>🕒 Last updated: <span id="lastUpdated">-</span></span>
                 </div>
             </div>
@@ -214,9 +211,9 @@
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                timeZone: 'UTC'
+                timeZone: 'Asia/Kolkata'
             };
-            return date.toLocaleDateString('en-US', options) + ' UTC';
+            return date.toLocaleDateString('en-IN', options) + ' IST';
         }
 
         function renderTools(data) {
@@ -229,7 +226,10 @@
                 return;
             }
 
-            const toolsHTML = tools.map(filename => {
+            // Filter out index.html
+            const filteredTools = tools.filter(filename => filename.toLowerCase() !== 'index.html');
+
+            const toolsHTML = filteredTools.map(filename => {
                 const name = extractToolName(filename);
                 const icon = name.charAt(0);
                 
@@ -244,8 +244,7 @@
             container.innerHTML = `<div class="tools-grid">${toolsHTML}</div>`;
 
             // Update footer with metadata if available
-            if (data.version && data.lastUpdated) {
-                document.getElementById('version').textContent = data.version;
+            if (data.lastUpdated) {
                 document.getElementById('lastUpdated').textContent = formatDate(data.lastUpdated);
                 footer.style.display = 'block';
             }
