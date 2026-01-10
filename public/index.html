@@ -1,439 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Dev Tools - Terminal</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
 
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/12.7.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/12.7.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/12.7.0/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-
-        body {
-            font-family: 'Courier New', monospace;
-            background: #0a0a0a;
-            color: #00ff00;
-            min-height: 100vh;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 255, 0, 0.03) 0px,
-                rgba(0, 255, 0, 0.03) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(transparent, rgba(0, 255, 0, 0.3), transparent);
-            animation: scanline 8s linear infinite;
-            pointer-events: none;
-            z-index: 3;
-        }
-
-        .terminal {
-            max-width: 900px;
-            margin: 0 auto;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #00ff00;
-            border-radius: 4px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 100px rgba(0, 255, 0, 0.05);
-            position: relative;
-            z-index: 1;
-        }
-
-        .terminal-header {
-            background: #001a00;
-            padding: 0.5rem 1rem;
-            border-bottom: 1px solid #00ff00;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .terminal-button {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #00ff00;
-            box-shadow: 0 0 5px #00ff00;
-        }
-
-        .terminal-title {
-            margin-left: auto;
-            font-size: 0.85rem;
-            opacity: 0.7;
-        }
-
-        .terminal-body {
-            padding: 1.5rem;
-            min-height: 500px;
-        }
-
-        .header-text {
-            margin-bottom: 1.5rem;
-        }
-
-        .header-text h1 {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-            text-shadow: 0 0 10px #00ff00;
-        }
-
-        .header-text .subtitle {
-            font-size: 0.85rem;
-            opacity: 0.7;
-        }
-
-        .author {
-            font-size: 0.8rem;
-            opacity: 0.6;
-            margin-top: 0.25rem;
-        }
-
-        .author a {
-            color: #00ff00;
-            text-decoration: none;
-            border-bottom: 1px dotted #00ff00;
-        }
-
-        .author a:hover {
-            text-shadow: 0 0 5px #00ff00;
-        }
-
-        .prompt {
-            margin-bottom: 1rem;
-        }
-
-        .prompt-line {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .prompt-symbol {
-            color: #00ff00;
-            text-shadow: 0 0 5px #00ff00;
-        }
-
-        .tools-list {
-            margin-top: 1rem;
-        }
-
-        .tool-item {
-            padding: 0.5rem 1rem;
-            margin: 0.25rem 0;
-            cursor: pointer;
-            transition: all 0.1s;
-            border-left: 3px solid transparent;
-        }
-
-        .tool-item:hover {
-            background: rgba(0, 255, 0, 0.1);
-            border-left-color: #00ff00;
-        }
-
-        .tool-item.selected {
-            background: rgba(0, 255, 0, 0.2);
-            border-left-color: #00ff00;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-        }
-
-        .tool-number {
-            color: #00aa00;
-            margin-right: 1rem;
-            display: inline-block;
-            width: 2rem;
-        }
-
-        .tool-name {
-            color: #00ff00;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 16px;
-            background: #00ff00;
-            animation: blink 1s infinite;
-            margin-left: 4px;
-            box-shadow: 0 0 5px #00ff00;
-        }
-
-        .footer {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(0, 255, 0, 0.3);
-            font-size: 0.75rem;
-            opacity: 0.5;
-        }
-
-        .controls {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(0, 255, 0, 0.05);
-            border: 1px solid rgba(0, 255, 0, 0.3);
-            font-size: 0.8rem;
-        }
-
-        .controls-title {
-            margin-bottom: 0.5rem;
-            opacity: 0.7;
-        }
-
-        .control-item {
-            margin: 0.25rem 0;
-        }
-
-        .key {
-            background: rgba(0, 255, 0, 0.2);
-            padding: 0.1rem 0.4rem;
-            border: 1px solid #00ff00;
-            border-radius: 2px;
-            margin: 0 0.25rem;
-            font-weight: bold;
-        }
-
-        .loading {
-            opacity: 0.6;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 0.5rem;
-            }
-            
-            .terminal-body {
-                padding: 1rem;
-            }
-        }
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        body, #message { margin-top: 0; background: white; box-shadow: none; }
+        body { border-top: 16px solid #ffa100; }
+      }
     </style>
-</head>
-<body>
-    <div class="terminal">
-        <div class="terminal-header">
-            <div class="terminal-button"></div>
-            <div class="terminal-button"></div>
-            <div class="terminal-button"></div>
-            <div class="terminal-title">root@devtools:~#</div>
-        </div>
-        <div class="terminal-body">
-            <div class="header-text">
-                <h1>⚡ QUICK DEV TOOLS v1.0</h1>
-                <div class="subtitle">Essential development utilities</div>
-                <div class="author">by <a href="https://www.linkedin.com/in/taosif7/" target="_blank" rel="noopener">Taosif Jamal</a></div>
-            </div>
-
-            <div class="prompt">
-                <div class="prompt-line">
-                    <span class="prompt-symbol">$</span>
-                    <span>./list-tools.sh</span>
-                </div>
-            </div>
-
-            <div id="toolsContainer" class="loading">
-                <div class="prompt-line">
-                    <span class="prompt-symbol">></span>
-                    <span>Loading tools<span class="cursor"></span></span>
-                </div>
-            </div>
-
-            <div id="controls" class="controls" style="display: none;">
-                <div class="controls-title">[KEYBOARD CONTROLS]</div>
-                <div class="control-item"><span class="key">↑</span><span class="key">↓</span> Navigate</div>
-                <div class="control-item"><span class="key">Enter</span> Select tool</div>
-                <div class="control-item"><span class="key">1-9</span> Quick select</div>
-                <div class="control-item"><span class="key">Mouse</span> Click to select</div>
-            </div>
-
-            <div id="footer" class="footer" style="display: none;">
-                <div>Last updated: <span id="lastUpdated">-</span></div>
-            </div>
-        </div>
+  </head>
+  <body>
+    <div id="message">
+      <h2>Welcome</h2>
+      <h1>Firebase Hosting Setup Complete</h1>
+      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
+      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
     </div>
+    <p id="load">Firebase SDK Loading&hellip;</p>
 
     <script>
-        const sampleIndex = {
-            "version": 1,
-            "lastUpdated": "2026-01-10T14:30:45Z",
-            "tools": [
-                "json-formatter.html",
-                "base64-encoder.html",
-                "color-picker.html",
-                "uuid-generator.html",
-                "regex-tester.html",
-                "markdown-preview.html",
-                "timestamp-converter.html",
-                "hash-generator.html"
-            ]
-        };
+      document.addEventListener('DOMContentLoaded', function() {
+        const loadEl = document.querySelector('#load');
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        // firebase.auth().onAuthStateChanged(user => { });
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        // firebase.firestore().doc('/foo/bar').get().then(() => { });
+        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+        // firebase.messaging().requestPermission().then(() => { });
+        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+        // firebase.analytics(); // call to activate
+        // firebase.analytics().logEvent('tutorial_completed');
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
 
-        let tools = [];
-        let selectedIndex = 0;
-
-        function extractToolName(filename) {
-            return filename
-                .replace('.html', '')
-                .split('-')
-                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(' ');
+        try {
+          let app = firebase.app();
+          let features = [
+            'auth', 
+            'database', 
+            'firestore',
+            'functions',
+            'messaging', 
+            'storage', 
+            'analytics', 
+            'remoteConfig',
+            'performance',
+          ].filter(feature => typeof app[feature] === 'function');
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+        } catch (e) {
+          console.error(e);
+          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
         }
-
-        function formatDate(isoString) {
-            const date = new Date(isoString);
-            const options = { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Asia/Kolkata'
-            };
-            return date.toLocaleDateString('en-IN', options) + ' IST';
-        }
-
-        function updateSelection() {
-            const items = document.querySelectorAll('.tool-item');
-            items.forEach((item, index) => {
-                item.classList.toggle('selected', index === selectedIndex);
-            });
-        }
-
-        function selectTool(index) {
-            if (index >= 0 && index < tools.length) {
-                window.location.href = tools[index];
-            }
-        }
-
-        function renderTools(data) {
-            const container = document.getElementById('toolsContainer');
-            const footer = document.getElementById('footer');
-            const controls = document.getElementById('controls');
-            const toolsList = data.tools || data;
-            
-            if (!toolsList || toolsList.length === 0) {
-                container.innerHTML = '<div class="prompt-line"><span class="prompt-symbol">!</span><span>Error: No tools found</span></div>';
-                return;
-            }
-
-            // Filter out index.html
-            tools = toolsList.filter(filename => filename.toLowerCase() !== 'index.html');
-
-            const toolsHTML = tools.map((filename, index) => {
-                const name = extractToolName(filename);
-                const num = (index + 1).toString().padStart(2, '0');
-                
-                return `
-                    <div class="tool-item" data-index="${index}">
-                        <span class="tool-number">[${num}]</span>
-                        <span class="tool-name">${name}</span>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = `
-                <div class="prompt-line">
-                    <span class="prompt-symbol">></span>
-                    <span>Found ${tools.length} tools</span>
-                </div>
-                <div class="tools-list">${toolsHTML}</div>
-            `;
-
-            // Add click handlers
-            document.querySelectorAll('.tool-item').forEach((item, index) => {
-                item.addEventListener('click', () => {
-                    selectedIndex = index;
-                    updateSelection();
-                    setTimeout(() => selectTool(index), 200);
-                });
-            });
-
-            controls.style.display = 'block';
-            updateSelection();
-
-            // Update footer
-            if (data.lastUpdated) {
-                document.getElementById('lastUpdated').textContent = formatDate(data.lastUpdated);
-                footer.style.display = 'block';
-            }
-        }
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (tools.length === 0) return;
-
-            switch(e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    selectedIndex = (selectedIndex - 1 + tools.length) % tools.length;
-                    updateSelection();
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    selectedIndex = (selectedIndex + 1) % tools.length;
-                    updateSelection();
-                    break;
-                case 'Enter':
-                    e.preventDefault();
-                    selectTool(selectedIndex);
-                    break;
-                default:
-                    // Number keys 1-9
-                    const num = parseInt(e.key);
-                    if (num >= 1 && num <= tools.length) {
-                        selectedIndex = num - 1;
-                        updateSelection();
-                        setTimeout(() => selectTool(selectedIndex), 200);
-                    }
-            }
-        });
-
-        async function loadTools() {
-            try {
-                const response = await fetch('index.json');
-                if (response.ok) {
-                    const data = await response.json();
-                    renderTools(data);
-                } else {
-                    renderTools(sampleIndex);
-                }
-            } catch (error) {
-                renderTools(sampleIndex);
-            }
-        }
-
-        loadTools();
+      });
     </script>
-</body>
+  </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Dev Tools</title>
+    <title>Quick Dev Tools - Terminal</title>
     <style>
         * {
             margin: 0;
@@ -11,172 +11,276 @@
             box-sizing: border-box;
         }
 
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
             min-height: 100vh;
-            padding: 1.5rem;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            font-size: 2rem;
-            color: white;
-            margin-bottom: 0.25rem;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            color: rgba(255,255,255,0.85);
-            font-size: 0.9rem;
-        }
-
-        .author {
-            color: rgba(255,255,255,0.9);
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        .author a {
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            border-bottom: 1px solid rgba(255,255,255,0.5);
-            transition: border-color 0.2s;
-        }
-
-        .author a:hover {
-            border-bottom-color: white;
-        }
-
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1rem;
-        }
-
-        .tool-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.25rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: all 0.2s ease;
-            cursor: pointer;
+            padding: 2rem;
             position: relative;
             overflow: hidden;
         }
 
-        .tool-card::before {
+        body::before {
             content: '';
-            position: absolute;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 0, 0.03) 0px,
+                rgba(0, 255, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+            background: linear-gradient(transparent, rgba(0, 255, 0, 0.3), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 3;
         }
 
-        .tool-card:hover::before {
-            transform: scaleX(1);
+        .terminal {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 100px rgba(0, 255, 0, 0.05);
+            position: relative;
+            z-index: 1;
         }
 
-        .tool-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        }
-
-        .tool-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0.75rem;
-            font-size: 1.2rem;
-            color: white;
-            font-weight: 600;
-        }
-
-        .tool-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .loading {
-            text-align: center;
-            color: white;
-            padding: 2rem;
-        }
-
-        .error {
-            background: #fff5f5;
-            border: 2px solid #fc8181;
-            border-radius: 8px;
-            padding: 1.5rem;
-            color: #c53030;
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 3rem;
-            padding-top: 2rem;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.85rem;
-        }
-
-        .footer-info {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .footer-item {
+        .terminal-header {
+            background: #001a00;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #00ff00;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            min-height: 500px;
+        }
+
+        .header-text {
+            margin-bottom: 1.5rem;
+        }
+
+        .header-text h1 {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .header-text .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .author {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 0.25rem;
+        }
+
+        .author a {
+            color: #00ff00;
+            text-decoration: none;
+            border-bottom: 1px dotted #00ff00;
+        }
+
+        .author a:hover {
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .prompt {
+            margin-bottom: 1rem;
+        }
+
+        .prompt-line {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .prompt-symbol {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .tools-list {
+            margin-top: 1rem;
+        }
+
+        .tool-item {
+            padding: 0.5rem 1rem;
+            margin: 0.25rem 0;
+            cursor: pointer;
+            transition: all 0.1s;
+            border-left: 3px solid transparent;
+        }
+
+        .tool-item:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-left-color: #00ff00;
+        }
+
+        .tool-item.selected {
+            background: rgba(0, 255, 0, 0.2);
+            border-left-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .tool-number {
+            color: #00aa00;
+            margin-right: 1rem;
+            display: inline-block;
+            width: 2rem;
+        }
+
+        .tool-name {
+            color: #00ff00;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #00ff00;
+            animation: blink 1s infinite;
+            margin-left: 4px;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0, 255, 0, 0.3);
+            font-size: 0.75rem;
+            opacity: 0.5;
+        }
+
+        .controls {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            font-size: 0.8rem;
+        }
+
+        .controls-title {
+            margin-bottom: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .control-item {
+            margin: 0.25rem 0;
+        }
+
+        .key {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 0.1rem 0.4rem;
+            border: 1px solid #00ff00;
+            border-radius: 2px;
+            margin: 0 0.25rem;
+            font-weight: bold;
+        }
+
+        .loading {
+            opacity: 0.6;
+        }
+
         @media (max-width: 768px) {
-            .tools-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            body {
+                padding: 0.5rem;
+            }
+            
+            .terminal-body {
+                padding: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚡ Quick Dev Tools</h1>
-            <p class="subtitle">Essential development utilities</p>
-            <p class="author">by <a href="https://www.linkedin.com/in/taosif7/" target="_blank" rel="noopener">Taosif Jamal</a></p>
-        </header>
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <div class="terminal-title">root@devtools:~#</div>
+        </div>
+        <div class="terminal-body">
+            <div class="header-text">
+                <h1>⚡ QUICK DEV TOOLS v1.0</h1>
+                <div class="subtitle">Essential development utilities</div>
+                <div class="author">by <a href="https://www.linkedin.com/in/taosif7/" target="_blank" rel="noopener">Taosif Jamal</a></div>
+            </div>
 
-        <div id="toolsContainer" class="loading">Loading...</div>
-
-        <footer id="footer" style="display: none;">
-            <div class="footer-info">
-                <div class="footer-item">
-                    <span>🕒 Last updated: <span id="lastUpdated">-</span></span>
+            <div class="prompt">
+                <div class="prompt-line">
+                    <span class="prompt-symbol">$</span>
+                    <span>./list-tools.sh</span>
                 </div>
             </div>
-        </footer>
+
+            <div id="toolsContainer" class="loading">
+                <div class="prompt-line">
+                    <span class="prompt-symbol">></span>
+                    <span>Loading tools<span class="cursor"></span></span>
+                </div>
+            </div>
+
+            <div id="controls" class="controls" style="display: none;">
+                <div class="controls-title">[KEYBOARD CONTROLS]</div>
+                <div class="control-item"><span class="key">↑</span><span class="key">↓</span> Navigate</div>
+                <div class="control-item"><span class="key">Enter</span> Select tool</div>
+                <div class="control-item"><span class="key">1-9</span> Quick select</div>
+                <div class="control-item"><span class="key">Mouse</span> Click to select</div>
+            </div>
+
+            <div id="footer" class="footer" style="display: none;">
+                <div>Last updated: <span id="lastUpdated">-</span></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -194,6 +298,9 @@
                 "hash-generator.html"
             ]
         };
+
+        let tools = [];
+        let selectedIndex = 0;
 
         function extractToolName(filename) {
             return filename
@@ -216,39 +323,101 @@
             return date.toLocaleDateString('en-IN', options) + ' IST';
         }
 
+        function updateSelection() {
+            const items = document.querySelectorAll('.tool-item');
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === selectedIndex);
+            });
+        }
+
+        function selectTool(index) {
+            if (index >= 0 && index < tools.length) {
+                window.location.href = tools[index];
+            }
+        }
+
         function renderTools(data) {
             const container = document.getElementById('toolsContainer');
             const footer = document.getElementById('footer');
-            const tools = data.tools || data;
+            const controls = document.getElementById('controls');
+            const toolsList = data.tools || data;
             
-            if (!tools || tools.length === 0) {
-                container.innerHTML = '<div class="error">No tools found</div>';
+            if (!toolsList || toolsList.length === 0) {
+                container.innerHTML = '<div class="prompt-line"><span class="prompt-symbol">!</span><span>Error: No tools found</span></div>';
                 return;
             }
 
             // Filter out index.html
-            const filteredTools = tools.filter(filename => filename.toLowerCase() !== 'index.html');
+            tools = toolsList.filter(filename => filename.toLowerCase() !== 'index.html');
 
-            const toolsHTML = filteredTools.map(filename => {
+            const toolsHTML = tools.map((filename, index) => {
                 const name = extractToolName(filename);
-                const icon = name.charAt(0);
+                const num = (index + 1).toString().padStart(2, '0');
                 
                 return `
-                    <div class="tool-card" onclick="window.location.href='${filename}'">
-                        <div class="tool-icon">${icon}</div>
-                        <div class="tool-name">${name}</div>
+                    <div class="tool-item" data-index="${index}">
+                        <span class="tool-number">[${num}]</span>
+                        <span class="tool-name">${name}</span>
                     </div>
                 `;
             }).join('');
 
-            container.innerHTML = `<div class="tools-grid">${toolsHTML}</div>`;
+            container.innerHTML = `
+                <div class="prompt-line">
+                    <span class="prompt-symbol">></span>
+                    <span>Found ${tools.length} tools</span>
+                </div>
+                <div class="tools-list">${toolsHTML}</div>
+            `;
 
-            // Update footer with metadata if available
+            // Add click handlers
+            document.querySelectorAll('.tool-item').forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    selectedIndex = index;
+                    updateSelection();
+                    setTimeout(() => selectTool(index), 200);
+                });
+            });
+
+            controls.style.display = 'block';
+            updateSelection();
+
+            // Update footer
             if (data.lastUpdated) {
                 document.getElementById('lastUpdated').textContent = formatDate(data.lastUpdated);
                 footer.style.display = 'block';
             }
         }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (tools.length === 0) return;
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedIndex = (selectedIndex - 1 + tools.length) % tools.length;
+                    updateSelection();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedIndex = (selectedIndex + 1) % tools.length;
+                    updateSelection();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    selectTool(selectedIndex);
+                    break;
+                default:
+                    // Number keys 1-9
+                    const num = parseInt(e.key);
+                    if (num >= 1 && num <= tools.length) {
+                        selectedIndex = num - 1;
+                        updateSelection();
+                        setTimeout(() => selectTool(selectedIndex), 200);
+                    }
+            }
+        });
 
         async function loadTools() {
             try {
