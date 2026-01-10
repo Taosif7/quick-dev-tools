@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Log Sanitizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        .drop-zone:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .drop-zone.dragover {
+            border-color: #764ba2;
+            background: #e8eaff;
+            transform: scale(1.02);
+        }
+
+        .drop-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .drop-text {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .drop-subtext {
+            color: #999;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .stats.show {
+            display: block;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .processing {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .processing.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            color: #28a745;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Analytics Log Sanitizer</h1>
+        <p class="subtitle">Extract and deduplicate analytics event logs from your files</p>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">📁</div>
+            <div class="drop-text">Drag & Drop your log file here</div>
+            <div class="drop-subtext">or click to browse</div>
+        </div>
+
+        <input type="file" id="fileInput" accept=".txt">
+
+        <div class="processing" id="processing">
+            <div class="spinner"></div>
+            <div>Processing your file...</div>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <span class="stat-label">File Name:</span>
+                <span class="stat-value" id="fileName">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Lines:</span>
+                <span class="stat-value" id="totalLines">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Analytics Events Found:</span>
+                <span class="stat-value" id="eventsFound">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Duplicates Removed:</span>
+                <span class="stat-value" id="duplicatesRemoved">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Unique Events:</span>
+                <span class="stat-value" id="uniqueEvents">-</span>
+            </div>
+            <div class="success-message">✅ File sanitized and downloaded successfully!</div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const processing = document.getElementById('processing');
+        const stats = document.getElementById('stats');
+
+        // Click to browse
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when dragging over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+
+        // Handle dropped files
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // Handle file input
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.txt')) {
+                alert('Please upload a .txt file');
+                return;
+            }
+
+            processing.classList.add('show');
+            stats.classList.remove('show');
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                sanitizeFile(content, file.name);
+            };
+
+            reader.readAsText(file);
+        }
+
+        function sanitizeFile(content, fileName) {
+            const lines = content.split('\n');
+            const targetString = "Analytics Event:";
+            
+            let sanitizedLines = [];
+            let previousLine = null;
+            let duplicatesRemoved = 0;
+            let totalAnalyticsEvents = 0;
+
+            for (let line of lines) {
+                // Only process lines that contain "Analytics Event:"
+                if (line.includes(targetString)) {
+                    totalAnalyticsEvents++;
+                    
+                    // If previous line was the same, skip this duplicate
+                    if (previousLine === line) {
+                        duplicatesRemoved++;
+                        continue;
+                    }
+                    
+                    // Add analytics event line to sanitized output
+                    sanitizedLines.push(line);
+                    previousLine = line;
+                }
+            }
+
+            // Update statistics
+            document.getElementById('fileName').textContent = fileName;
+            document.getElementById('totalLines').textContent = lines.length;
+            document.getElementById('eventsFound').textContent = totalAnalyticsEvents;
+            document.getElementById('duplicatesRemoved').textContent = duplicatesRemoved;
+            document.getElementById('uniqueEvents').textContent = sanitizedLines.length;
+
+            // Download sanitized file
+            const sanitizedContent = sanitizedLines.join('\n');
+            const baseName = fileName.replace('.txt', '');
+            const outputFileName = `${baseName}-sanitised.txt`;
+            downloadFile(sanitizedContent, outputFileName);
+
+            // Show stats
+            processing.classList.remove('show');
+            stats.classList.add('show');
+
+            // Reset file input
+            fileInput.value = '';
+        }
+
+        function downloadFile(content, fileName) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
