@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Dev Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.9rem;
+        }
+
+        .author {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .author a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            transition: border-color 0.2s;
+        }
+
+        .author a:hover {
+            border-bottom-color: white;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .tool-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+        }
+
+        .error {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: #c53030;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Quick Dev Tools</h1>
+            <p class="subtitle">Essential development utilities</p>
+            <p class="author">by <a href="https://www.linkedin.com/in/taosif7/" target="_blank" rel="noopener">Taosif Jamal</a></p>
+        </header>
+
+        <div id="toolsContainer" class="loading">Loading...</div>
+    </div>
+
+    <script>
+        const sampleIndex = [
+            "json-formatter.html",
+            "base64-encoder.html",
+            "color-picker.html",
+            "uuid-generator.html",
+            "regex-tester.html",
+            "markdown-preview.html",
+            "timestamp-converter.html",
+            "hash-generator.html"
+        ];
+
+        function extractToolName(filename) {
+            return filename
+                .replace('.html', '')
+                .split('-')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+        }
+
+        function renderTools(tools) {
+            const container = document.getElementById('toolsContainer');
+            
+            if (!tools || tools.length === 0) {
+                container.innerHTML = '<div class="error">No tools found</div>';
+                return;
+            }
+
+            const toolsHTML = tools.map(filename => {
+                const name = extractToolName(filename);
+                const icon = name.charAt(0);
+                
+                return `
+                    <div class="tool-card" onclick="window.location.href='${filename}'">
+                        <div class="tool-icon">${icon}</div>
+                        <div class="tool-name">${name}</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="tools-grid">${toolsHTML}</div>`;
+        }
+
+        async function loadTools() {
+            try {
+                const response = await fetch('index.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    renderTools(data);
+                } else {
+                    renderTools(sampleIndex);
+                }
+            } catch (error) {
+                renderTools(sampleIndex);
+            }
+        }
+
+        loadTools();
+    </script>
+</body>
+</html>
