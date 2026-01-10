@@ -132,6 +132,27 @@
             text-align: center;
         }
 
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+        }
+
+        .footer-info {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         @media (max-width: 768px) {
             .tools-grid {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -148,19 +169,34 @@
         </header>
 
         <div id="toolsContainer" class="loading">Loading...</div>
+
+        <footer id="footer" style="display: none;">
+            <div class="footer-info">
+                <div class="footer-item">
+                    <span>📦 Version <span id="version">-</span></span>
+                </div>
+                <div class="footer-item">
+                    <span>🕒 Last updated: <span id="lastUpdated">-</span></span>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script>
-        const sampleIndex = [
-            "json-formatter.html",
-            "base64-encoder.html",
-            "color-picker.html",
-            "uuid-generator.html",
-            "regex-tester.html",
-            "markdown-preview.html",
-            "timestamp-converter.html",
-            "hash-generator.html"
-        ];
+        const sampleIndex = {
+            "version": 1,
+            "lastUpdated": "2026-01-10T14:30:45Z",
+            "tools": [
+                "json-formatter.html",
+                "base64-encoder.html",
+                "color-picker.html",
+                "uuid-generator.html",
+                "regex-tester.html",
+                "markdown-preview.html",
+                "timestamp-converter.html",
+                "hash-generator.html"
+            ]
+        };
 
         function extractToolName(filename) {
             return filename
@@ -170,8 +206,23 @@
                 .join(' ');
         }
 
-        function renderTools(tools) {
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'UTC'
+            };
+            return date.toLocaleDateString('en-US', options) + ' UTC';
+        }
+
+        function renderTools(data) {
             const container = document.getElementById('toolsContainer');
+            const footer = document.getElementById('footer');
+            const tools = data.tools || data;
             
             if (!tools || tools.length === 0) {
                 container.innerHTML = '<div class="error">No tools found</div>';
@@ -191,6 +242,13 @@
             }).join('');
 
             container.innerHTML = `<div class="tools-grid">${toolsHTML}</div>`;
+
+            // Update footer with metadata if available
+            if (data.version && data.lastUpdated) {
+                document.getElementById('version').textContent = data.version;
+                document.getElementById('lastUpdated').textContent = formatDate(data.lastUpdated);
+                footer.style.display = 'block';
+            }
         }
 
         async function loadTools() {
