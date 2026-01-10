@@ -42,6 +42,86 @@
             font-size: 14px;
         }
 
+        .settings {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #e0e0ff;
+        }
+
+        .settings-label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .settings-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .settings-input.error {
+            border-color: #dc3545;
+        }
+
+        .settings-hint {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .checkbox-container label {
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .settings-divider {
+            height: 1px;
+            background: #e0e0ff;
+            margin: 15px 0;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         .drop-zone {
             border: 3px dashed #667eea;
             border-radius: 12px;
@@ -154,6 +234,30 @@
         <h1>📊 Analytics Log Sanitizer</h1>
         <p class="subtitle">Extract and deduplicate analytics event logs from your files</p>
 
+        <div class="settings">
+            <label class="settings-label" for="patternInput">🔍 Pattern to Match</label>
+            <input 
+                type="text" 
+                id="patternInput" 
+                class="settings-input" 
+                value="Analytics Event:" 
+                placeholder="Enter pattern to search for..."
+            >
+            <div class="settings-hint" id="patternHint">Lines containing this pattern will be extracted and deduplicated</div>
+            <div class="error-message" id="regexError">Invalid regular expression</div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="regexToggle">
+                <label for="regexToggle">Enable Regex (Regular Expression)</label>
+            </div>
+            
+            <div class="settings-divider"></div>
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="deduplicateToggle" checked>
+                <label for="deduplicateToggle">Remove Duplicate Consecutive Logs</label>
+            </div>
+        </div>
+
         <div class="drop-zone" id="dropZone">
             <div class="drop-icon">📁</div>
             <div class="drop-text">Drag & Drop your log file here</div>
@@ -197,6 +301,44 @@
         const fileInput = document.getElementById('fileInput');
         const processing = document.getElementById('processing');
         const stats = document.getElementById('stats');
+        const patternInput = document.getElementById('patternInput');
+        const regexToggle = document.getElementById('regexToggle');
+        const deduplicateToggle = document.getElementById('deduplicateToggle');
+        const regexError = document.getElementById('regexError');
+        const patternHint = document.getElementById('patternHint');
+
+        // Validate regex when toggled or pattern changes
+        function validatePattern() {
+            if (regexToggle.checked) {
+                try {
+                    new RegExp(patternInput.value);
+                    patternInput.classList.remove('error');
+                    regexError.classList.remove('show');
+                    updateHintText();
+                    return true;
+                } catch (e) {
+                    patternInput.classList.add('error');
+                    regexError.classList.add('show');
+                    updateHintText();
+                    return false;
+                }
+            } else {
+                patternInput.classList.remove('error');
+                regexError.classList.remove('show');
+                updateHintText();
+                return true;
+            }
+        }
+
+        function updateHintText() {
+            const regexText = regexToggle.checked ? 'matching this regular expression' : 'containing this pattern';
+            const dedupeText = deduplicateToggle.checked ? 'and deduplicated' : '';
+            patternHint.textContent = `Lines ${regexText} will be extracted ${dedupeText}`.trim();
+        }
+
+        regexToggle.addEventListener('change', validatePattern);
+        deduplicateToggle.addEventListener('change', updateHintText);
+        patternInput.addEventListener('input', validatePattern);
 
         // Click to browse
         dropZone.addEventListener('click', () => {
@@ -263,34 +405,66 @@
 
         function sanitizeFile(content, fileName) {
             const lines = content.split('\n');
-            const targetString = "Analytics Event:";
+            const patternString = patternInput.value.trim();
+            const useRegex = regexToggle.checked;
+            const removeDuplicates = deduplicateToggle.checked;
+            
+            // Validate pattern
+            if (!patternString) {
+                alert('Please enter a pattern to match');
+                processing.classList.remove('show');
+                return;
+            }
+
+            // Create matcher based on mode
+            let matcher;
+            try {
+                if (useRegex) {
+                    const regex = new RegExp(patternString);
+                    matcher = (line) => regex.test(line);
+                } else {
+                    matcher = (line) => line.includes(patternString);
+                }
+            } catch (e) {
+                alert('Invalid regular expression: ' + e.message);
+                processing.classList.remove('show');
+                return;
+            }
             
             let sanitizedLines = [];
             let previousLine = null;
             let duplicatesRemoved = 0;
-            let totalAnalyticsEvents = 0;
+            let totalMatchingLines = 0;
 
             for (let line of lines) {
-                // Only process lines that contain "Analytics Event:"
-                if (line.includes(targetString)) {
-                    totalAnalyticsEvents++;
+                // Only process lines that match the pattern
+                if (matcher(line)) {
+                    totalMatchingLines++;
                     
-                    // If previous line was the same, skip this duplicate
-                    if (previousLine === line) {
+                    // Check for duplicates only if deduplication is enabled
+                    if (removeDuplicates && previousLine === line) {
                         duplicatesRemoved++;
                         continue;
                     }
                     
-                    // Add analytics event line to sanitized output
+                    // Add matching line to sanitized output
                     sanitizedLines.push(line);
                     previousLine = line;
                 }
             }
 
+            // Check if any matching lines were found
+            if (totalMatchingLines === 0) {
+                const modeText = useRegex ? 'matching regex' : 'containing';
+                alert(`No lines found ${modeText} "${patternString}"`);
+                processing.classList.remove('show');
+                return;
+            }
+
             // Update statistics
             document.getElementById('fileName').textContent = fileName;
             document.getElementById('totalLines').textContent = lines.length;
-            document.getElementById('eventsFound').textContent = totalAnalyticsEvents;
+            document.getElementById('eventsFound').textContent = totalMatchingLines;
             document.getElementById('duplicatesRemoved').textContent = duplicatesRemoved;
             document.getElementById('uniqueEvents').textContent = sanitizedLines.length;
 
