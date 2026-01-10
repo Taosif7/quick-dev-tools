@@ -9,21 +9,24 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required for committing the file
+      contents: write 
 
     steps:
-      # 1. Checkout Code
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      # 2. Generate the Index File
+      
       - name: Generate index file
+        # We pass the GitHub Run Number as an environment variable
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
         run: |
           cd public/tools/
           
           DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          VERSION=$(git rev-list --count HEAD)
+          
+          # Use the Env Variable we defined above (e.g., 45, 46, 47...)
+          VERSION=$BUILD_NUMBER
           
           echo "{" > index.json
           echo "  \"version\": $VERSION," >> index.json
@@ -46,18 +49,14 @@ jobs:
           echo "  ]" >> index.json
           echo "}" >> index.json
 
-      # 3. Commit and Push (MOVED UP)
-      # We commit the new file to the repo BEFORE deploying.
       - name: Commit and push index.json
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add public/tools/index.json
-          # [skip ci] is CRITICAL here to prevent an infinite loop
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: updated index file [v$(git rev-list --count HEAD)]" && git push)
+          # CRITICAL: Added [skip ci] to prevent infinite loops
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: updated index file [v${{ github.run_number }}] [skip ci]" && git push)
 
-      # 4. Deploy to Firebase
-      # Now we deploy. This picks up the file we just generated and committed.
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
