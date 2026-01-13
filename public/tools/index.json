@@ -1,7 +1,8 @@
 {
-  "version": 7,
-  "lastUpdated": "2026-01-13T07:13:57Z",
+  "version": 8,
+  "lastUpdated": "2026-01-13T14:41:40Z",
   "tools": [
+    "analytics-logs-to-json.html",
     "analytics-sanitiser.html",
     "base64-previewer.html",
     "curl-comparator.html",
