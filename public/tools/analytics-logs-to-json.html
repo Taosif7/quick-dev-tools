@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Event Log Parser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel h2 {
+            font-size: 18px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .output-area {
+            position: relative;
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            color: #0d47a1;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Analytics Event Log Parser</h1>
+            <p>Extract and convert analytics events from Flutter logs to JSON format</p>
+        </div>
+
+        <div class="content">
+            <div class="panel">
+                <h2>Input Logs</h2>
+                <div class="info-box">
+                    Paste your Flutter logs containing your custom search key entries. The parser will automatically extract event names and parameters. Customize the search key below (e.g., "Analytics Event:", "Log Event:", etc.)
+                </div>
+                <textarea id="inputLogs" placeholder="Paste your logs here...
+
+Example:
+Analytics Event: add_button_clicked with values: {current_count: 4, previous_screen: homescreen}"></textarea>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                        <label for="searchKey" style="display: block; font-size: 14px; color: #666; margin-bottom: 5px;">Search Key:</label>
+                        <input type="text" id="searchKey" value="Analytics Event:" placeholder="e.g., Analytics Event:" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'Courier New', monospace;">
+                    </div>
+                    
+                    <div class="toggle-group">
+                        <span class="toggle-label">Include all occurrences (with duplicates)</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="includeAllToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" id="parseBtn">🔍 Parse Events</button>
+                    <button class="btn-secondary" id="clearBtn">Clear</button>
+                </div>
+
+                <div id="statsContainer"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Output JSON</h2>
+                <div class="output-area">
+                    <textarea id="outputJson" readonly placeholder="Parsed JSON will appear here..."></textarea>
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" id="copyBtn">📋 Copy JSON</button>
+                    <button class="btn-secondary" id="downloadBtn">💾 Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copyNotification">✓ Copied to clipboard!</div>
+
+    <script>
+        function parseEvents() {
+            const input = document.getElementById('inputLogs').value;
+            const includeAll = document.getElementById('includeAllToggle').checked;
+            const searchKey = document.getElementById('searchKey').value;
+            const output = document.getElementById('outputJson');
+            const statsContainer = document.getElementById('statsContainer');
+
+            if (!input.trim()) {
+                output.value = '';
+                statsContainer.innerHTML = '<div class="error-message">⚠️ Please paste some logs first!</div>';
+                return;
+            }
+
+            if (!searchKey.trim()) {
+                output.value = '';
+                statsContainer.innerHTML = '<div class="error-message">⚠️ Please enter a search key!</div>';
+                return;
+            }
+
+            try {
+                const events = extractEvents(input, includeAll, searchKey);
+                
+                if (events.length === 0) {
+                    output.value = '';
+                    statsContainer.innerHTML = `<div class="error-message">⚠️ No events found with search key "${searchKey}" in the provided logs.</div>`;
+                    return;
+                }
+
+                output.value = JSON.stringify(events, null, 2);
+                
+                // Calculate statistics
+                const uniqueEvents = new Set(events.map(e => Object.keys(e)[0])).size;
+                const totalEvents = events.length;
+                const avgParams = events.reduce((sum, e) => {
+                    const params = Object.values(e)[0];
+                    return sum + Object.keys(params).length;
+                }, 0) / totalEvents;
+
+                statsContainer.innerHTML = `
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${totalEvents}</div>
+                            <div class="stat-label">Total Events</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${uniqueEvents}</div>
+                            <div class="stat-label">Unique Types</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${Math.round(avgParams)}</div>
+                            <div class="stat-label">Avg Params</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                output.value = '';
+                statsContainer.innerHTML = `<div class="error-message">❌ Error parsing logs: ${error.message}</div>`;
+            }
+        }
+
+        function extractEvents(logText, includeAll, searchKey) {
+            const lines = logText.split('\n');
+            const events = [];
+            const uniqueEvents = new Map();
+
+            // Escape special regex characters in the search key
+            const escapedSearchKey = searchKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const eventRegex = new RegExp(escapedSearchKey + '\\s*(\\S+)\\s+with values:\\s*\\{([^}]+)\\}', 'g');
+
+            for (const line of lines) {
+                let match;
+                while ((match = eventRegex.exec(line)) !== null) {
+                    const eventName = match[1];
+                    const paramsString = match[2];
+                    
+                    const params = parseParameters(paramsString);
+                    
+                    const eventObj = {
+                        [eventName]: params
+                    };
+
+                    if (includeAll) {
+                        events.push(eventObj);
+                    } else {
+                        // Store only unique event types (first occurrence)
+                        if (!uniqueEvents.has(eventName)) {
+                            uniqueEvents.set(eventName, eventObj);
+                        }
+                    }
+                }
+            }
+
+            return includeAll ? events : Array.from(uniqueEvents.values());
+        }
+
+        function parseParameters(paramsString) {
+            const params = {};
+            
+            // Split by comma, but be careful with nested objects/arrays
+            const parts = smartSplit(paramsString);
+            
+            for (const part of parts) {
+                const colonIndex = part.indexOf(':');
+                if (colonIndex === -1) continue;
+                
+                const key = part.substring(0, colonIndex).trim();
+                let value = part.substring(colonIndex + 1).trim();
+                
+                // Clean up the value
+                if (value.startsWith('{') || value.startsWith('[')) {
+                    // Keep as string for complex objects
+                    params[key] = value;
+                } else {
+                    params[key] = value;
+                }
+            }
+            
+            return params;
+        }
+
+        function smartSplit(str) {
+            const parts = [];
+            let current = '';
+            let depth = 0;
+            
+            for (let i = 0; i < str.length; i++) {
+                const char = str[i];
+                
+                if (char === '{' || char === '[') {
+                    depth++;
+                    current += char;
+                } else if (char === '}' || char === ']') {
+                    depth--;
+                    current += char;
+                } else if (char === ',' && depth === 0) {
+                    if (current.trim()) {
+                        parts.push(current.trim());
+                    }
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            if (current.trim()) {
+                parts.push(current.trim());
+            }
+            
+            return parts;
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('outputJson');
+            const notification = document.getElementById('copyNotification');
+            
+            if (!output.value) {
+                return;
+            }
+            
+            output.select();
+            document.execCommand('copy');
+            
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        function downloadJson() {
+            const output = document.getElementById('outputJson');
+            
+            if (!output.value) {
+                return;
+            }
+            
+            const blob = new Blob([output.value], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics_events_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function clearInput() {
+            document.getElementById('inputLogs').value = '';
+            document.getElementById('outputJson').value = '';
+            document.getElementById('statsContainer').innerHTML = '';
+        }
+
+        // Event Listeners
+        document.getElementById('parseBtn').addEventListener('click', parseEvents);
+        document.getElementById('clearBtn').addEventListener('click', clearInput);
+        document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+        document.getElementById('downloadBtn').addEventListener('click', downloadJson);
+        
+        // Auto-parse on toggle change
+        document.getElementById('includeAllToggle').addEventListener('change', () => {
+            const input = document.getElementById('inputLogs').value;
+            if (input.trim()) {
+                parseEvents();
+            }
+        });
+    </script>
+</body>
+</html>
