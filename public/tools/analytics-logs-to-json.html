@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics Event Log Parser</title>
+    <title>Analytics Event Log Parser - Quick Dev Tools</title>
     <style>
         * {
             margin: 0;
@@ -11,128 +11,221 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
 
-        .container {
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 0, 0.03) 0px,
+                rgba(0, 255, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(transparent, rgba(0, 255, 0, 0.3), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .terminal {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 100px rgba(0, 255, 0, 0.05);
+            position: relative;
+            z-index: 1;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        .terminal-header {
+            background: #001a00;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 5px #00ff00;
         }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .back-link {
+            color: #00ff00;
+            text-decoration: none;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 2px;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+        }
+
+        .header-text {
+            margin-bottom: 1.5rem;
+        }
+
+        .header-text h1 {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .header-text .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.7;
         }
 
         .content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 30px;
+            gap: 1.5rem;
         }
 
         .panel {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 1rem;
         }
 
         .panel h2 {
-            font-size: 18px;
-            color: #333;
+            font-size: 1rem;
+            color: #00ff00;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.5rem;
+            text-shadow: 0 0 5px #00ff00;
         }
 
         .panel h2::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            content: '>';
+            color: #00aa00;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 0, 0.3);
             border-radius: 2px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            transition: all 0.3s;
         }
 
         textarea {
-            width: 100%;
-            height: 400px;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-            transition: border-color 0.3s;
+            height: 300px;
         }
 
-        textarea:focus {
+        textarea:focus, input[type="text"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: rgba(0, 255, 0, 0.4);
         }
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 0.5rem;
             flex-wrap: wrap;
         }
 
         button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 2px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            transition: all 0.2s;
             flex: 1;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        button:hover {
+            background: rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        button:active {
+            transform: translateY(1px);
         }
 
         .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .btn-secondary:hover {
-            background: #e0e0e0;
+            background: rgba(0, 255, 0, 0.05);
+            border-color: rgba(0, 255, 0, 0.5);
         }
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 2px;
         }
 
         .stat-item {
@@ -140,37 +233,36 @@
         }
 
         .stat-value {
-            font-size: 32px;
+            font-size: 2rem;
             font-weight: bold;
-            color: #667eea;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
         }
 
         .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
+            font-size: 0.7rem;
+            color: #00aa00;
+            margin-top: 0.25rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-
-        .output-area {
-            position: relative;
         }
 
         .copy-notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #4caf50;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 1rem 1.5rem;
+            border-radius: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
             opacity: 0;
             transform: translateY(-20px);
             transition: all 0.3s;
             pointer-events: none;
             z-index: 1000;
+            font-family: 'Courier New', monospace;
         }
 
         .copy-notification.show {
@@ -179,39 +271,38 @@
         }
 
         .error-message {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            border-radius: 4px;
-            color: #856404;
-            font-size: 14px;
+            background: rgba(255, 0, 0, 0.1);
+            border-left: 3px solid #ff0000;
+            padding: 0.75rem;
+            border-radius: 2px;
+            color: #ff0000;
+            font-size: 0.85rem;
         }
 
         .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            border-radius: 4px;
-            color: #0d47a1;
-            font-size: 13px;
+            background: rgba(0, 255, 0, 0.05);
+            border-left: 3px solid #00ff00;
+            padding: 0.75rem;
+            border-radius: 2px;
+            color: #00aa00;
+            font-size: 0.8rem;
             line-height: 1.6;
-        }
-
-        @media (max-width: 1024px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
         }
 
         .toggle-group {
             display: flex;
-            gap: 10px;
+            gap: 0.75rem;
             align-items: center;
+            padding: 0.5rem;
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            border-radius: 2px;
         }
 
         .toggle-label {
-            font-size: 14px;
-            color: #666;
+            font-size: 0.85rem;
+            color: #00aa00;
+            flex: 1;
         }
 
         .toggle-switch {
@@ -233,7 +324,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.3);
             transition: 0.4s;
             border-radius: 26px;
         }
@@ -243,77 +335,117 @@
             content: "";
             height: 18px;
             width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
+            left: 3px;
+            bottom: 3px;
+            background-color: #00ff00;
             transition: 0.4s;
             border-radius: 50%;
+            box-shadow: 0 0 5px #00ff00;
         }
 
         input:checked + .slider {
-            background-color: #667eea;
+            background-color: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
         }
 
         input:checked + .slider:before {
             transform: translateX(24px);
         }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: #00aa00;
+            margin-bottom: 0.25rem;
+        }
+
+        .input-wrapper {
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .terminal-body {
+                padding: 1rem;
+            }
+
+            textarea {
+                height: 250px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Analytics Event Log Parser</h1>
-            <p>Extract and convert analytics events from logs to JSON format</p>
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <a href="index.html" class="back-link">← BACK</a>
+            <div class="terminal-title">root@devtools:~/analytics-parser#</div>
         </div>
+        <div class="terminal-body">
+            <div class="header-text">
+                <h1>📊 ANALYTICS EVENT LOG PARSER</h1>
+                <div class="subtitle">Extract and convert analytics events from logs to JSON format</div>
+            </div>
 
-        <div class="content">
-            <div class="panel">
-                <h2>Input Logs</h2>
-                <div class="info-box">
-                    Paste your logs containing your custom search key entries. The parser will automatically extract event names and parameters. Customize the search key below (e.g., "Analytics Event:", "Log Event:", etc.)
-                </div>
-                <textarea id="inputLogs" placeholder="Paste your logs here...
+            <div class="content">
+                <div class="panel">
+                    <h2>INPUT LOGS</h2>
+                    <div class="info-box">
+                        Paste your logs containing your custom search key entries. The parser will automatically extract event names and parameters. Customize the search key below (e.g., "Analytics Event:", "Log Event:", etc.)
+                    </div>
+                    <textarea id="inputLogs" placeholder="Paste your logs here...
 
 Example:
 Analytics Event: add_button_clicked with values: {current_count: 4, previous_screen: homescreen}"></textarea>
-                
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div>
-                        <label for="searchKey" style="display: block; font-size: 14px; color: #666; margin-bottom: 5px;">Search Key:</label>
-                        <input type="text" id="searchKey" value="Analytics Event:" placeholder="e.g., Analytics Event:" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; font-family: 'Courier New', monospace;">
-                    </div>
                     
-                    <div class="toggle-group">
-                        <span class="toggle-label">Include all occurrences (with duplicates)</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="includeAllToggle">
-                            <span class="slider"></span>
-                        </label>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div class="input-wrapper">
+                            <label for="searchKey">Search Key:</label>
+                            <input type="text" id="searchKey" value="Analytics Event:" placeholder="e.g., Analytics Event:">
+                        </div>
+                        
+                        <div class="toggle-group">
+                            <span class="toggle-label">Include all occurrences (with duplicates)</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="includeAllToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" id="parseBtn">🔍 PARSE EVENTS</button>
+                        <button class="btn-secondary" id="clearBtn">CLEAR</button>
+                    </div>
+
+                    <div id="statsContainer"></div>
                 </div>
 
-                <div class="button-group">
-                    <button class="btn-primary" id="parseBtn">🔍 Parse Events</button>
-                    <button class="btn-secondary" id="clearBtn">Clear</button>
-                </div>
-
-                <div id="statsContainer"></div>
-            </div>
-
-            <div class="panel">
-                <h2>Output JSON</h2>
-                <div class="output-area">
-                    <textarea id="outputJson" readonly placeholder="Parsed JSON will appear here..."></textarea>
-                </div>
-                <div class="button-group">
-                    <button class="btn-primary" id="copyBtn">📋 Copy JSON</button>
-                    <button class="btn-secondary" id="downloadBtn">💾 Download</button>
+                <div class="panel">
+                    <h2>OUTPUT JSON</h2>
+                    <div class="output-area">
+                        <textarea id="outputJson" readonly placeholder="Parsed JSON will appear here..."></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-primary" id="copyBtn">📋 COPY JSON</button>
+                        <button class="btn-secondary" id="downloadBtn">💾 DOWNLOAD</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="copy-notification" id="copyNotification">✓ Copied to clipboard!</div>
+    <div class="copy-notification" id="copyNotification">✓ COPIED TO CLIPBOARD!</div>
 
     <script>
         function parseEvents() {
