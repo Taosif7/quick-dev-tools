@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics Log Sanitizer</title>
+    <title>Analytics Log Sanitizer - Quick Dev Tools</title>
     <style>
         * {
             margin: 0;
@@ -11,111 +11,214 @@
             box-sizing: border-box;
         }
 
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 0, 0.03) 0px,
+                rgba(0, 255, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(transparent, rgba(0, 255, 0, 0.3), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .terminal {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 100px rgba(0, 255, 0, 0.05);
             max-width: 600px;
             width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .terminal-header {
+            background: #001a00;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .back-link {
+            color: #00ff00;
+            text-decoration: none;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 2px;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: #00ff00;
+            margin-bottom: 0.25rem;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #00ff00;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+            color: #00aa00;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            opacity: 0.7;
         }
 
         .settings {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 8px;
-            border: 1px solid #e0e0ff;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 255, 0, 0.05);
+            border-radius: 2px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
         }
 
         .settings-label {
             display: block;
-            color: #333;
+            color: #00ff00;
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
         }
 
         .settings-input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 2px;
+            color: #00ff00;
+            font-size: 0.85rem;
             font-family: 'Courier New', monospace;
             transition: all 0.3s ease;
         }
 
         .settings-input:focus {
             outline: none;
-            border-color: #764ba2;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
         .settings-input.error {
-            border-color: #dc3545;
+            border-color: #ff0000;
+        }
+
+        .settings-input::placeholder {
+            color: rgba(0, 255, 0, 0.4);
         }
 
         .settings-hint {
-            color: #999;
-            font-size: 12px;
-            margin-top: 5px;
+            color: #00aa00;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            opacity: 0.7;
         }
 
         .checkbox-container {
             display: flex;
             align-items: center;
-            margin-top: 12px;
+            margin-top: 0.75rem;
         }
 
-        
         .checkbox-container input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
-            margin-right: 8px;
+            margin-right: 0.5rem;
             flex-shrink: 0;
+            accent-color: #00ff00;
         }
 
         .checkbox-container label {
-            color: #333;
-            font-size: 14px;
+            color: #00aa00;
+            font-size: 0.85rem;
             cursor: pointer;
             user-select: none;
         }
 
         .settings-divider {
             height: 1px;
-            background: #e0e0ff;
-            margin: 15px 0;
+            background: rgba(0, 255, 0, 0.2);
+            margin: 1rem 0;
         }
 
         .error-message {
-            color: #dc3545;
-            font-size: 12px;
-            margin-top: 5px;
+            color: #ff0000;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
             display: none;
         }
 
@@ -124,41 +227,46 @@
         }
 
         .drop-zone {
-            border: 3px dashed #667eea;
-            border-radius: 12px;
-            padding: 60px 20px;
+            border: 2px dashed rgba(0, 255, 0, 0.5);
+            border-radius: 2px;
+            padding: 3rem 1rem;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
-            background: #f8f9ff;
+            background: rgba(0, 255, 0, 0.03);
         }
 
         .drop-zone:hover {
-            border-color: #764ba2;
-            background: #f0f1ff;
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.08);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
         }
 
         .drop-zone.dragover {
-            border-color: #764ba2;
-            background: #e8eaff;
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.12);
             transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }
 
         .drop-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #00ff00;
         }
 
         .drop-text {
-            color: #667eea;
-            font-size: 18px;
+            color: #00ff00;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px #00ff00;
         }
 
         .drop-subtext {
-            color: #999;
-            font-size: 14px;
+            color: #00aa00;
+            font-size: 0.85rem;
+            opacity: 0.7;
         }
 
         input[type="file"] {
@@ -166,10 +274,11 @@
         }
 
         .stats {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 8px;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 255, 0, 0.05);
+            border-radius: 2px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
             display: none;
         }
 
@@ -180,8 +289,8 @@
         .stat-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
         }
 
         .stat-item:last-child {
@@ -189,18 +298,21 @@
         }
 
         .stat-label {
-            color: #666;
+            color: #00aa00;
             font-weight: 500;
+            font-size: 0.85rem;
         }
 
         .stat-value {
-            color: #667eea;
+            color: #00ff00;
             font-weight: 600;
+            text-shadow: 0 0 5px #00ff00;
+            font-size: 0.85rem;
         }
 
         .processing {
             text-align: center;
-            padding: 20px;
+            padding: 1.5rem;
             display: none;
         }
 
@@ -209,95 +321,116 @@
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 3px solid rgba(0, 255, 0, 0.2);
+            border-top: 3px solid #00ff00;
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            margin: 0 auto 1rem;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
         }
 
         .success-message {
-            color: #28a745;
+            color: #00ff00;
             font-weight: 600;
-            margin-top: 15px;
+            margin-top: 1rem;
+            text-shadow: 0 0 5px #00ff00;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .terminal-body {
+                padding: 1rem;
+            }
+
+            .drop-zone {
+                padding: 2rem 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📊 Analytics Log Sanitizer</h1>
-        <p class="subtitle">Extract and deduplicate analytics event logs from your files</p>
-
-        <div class="settings">
-            <label class="settings-label" for="patternInput">🔍 Pattern to Match</label>
-            <input 
-                type="text" 
-                id="patternInput" 
-                class="settings-input" 
-                value="Analytics Event:" 
-                placeholder="Enter pattern to search for..."
-            >
-            <div class="settings-hint" id="patternHint">Lines containing this pattern will be extracted and deduplicated</div>
-            <div class="error-message" id="regexError">Invalid regular expression</div>
-            <div class="checkbox-container">
-                <input type="checkbox" id="regexToggle">
-                <label for="regexToggle">Enable Regex (Regular Expression)</label>
-            </div>
-            
-            <div class="settings-divider"></div>
-            
-            <div class="checkbox-container">
-                <input type="checkbox" id="deduplicateToggle" checked>
-                <label for="deduplicateToggle">Remove Duplicate Consecutive Logs</label>
-            </div>
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <div class="terminal-button"></div>
+            <a href="index.html" class="back-link">← BACK</a>
+            <div class="terminal-title">root@devtools:~/log-sanitizer#</div>
         </div>
+        <div class="terminal-body">
+            <h1>📊 ANALYTICS LOG SANITIZER</h1>
+            <p class="subtitle">Extract and deduplicate analytics event logs from your files</p>
 
-        <div class="drop-zone" id="dropZone">
-            <div class="drop-icon">📁</div>
-            <div class="drop-text">Drag & Drop your log file here</div>
-            <div class="drop-subtext">or click to browse</div>
-        </div>
+            <div class="settings">
+                <label class="settings-label" for="patternInput">🔍 PATTERN TO MATCH</label>
+                <input 
+                    type="text" 
+                    id="patternInput" 
+                    class="settings-input" 
+                    value="Analytics Event:" 
+                    placeholder="Enter pattern to search for..."
+                >
+                <div class="settings-hint" id="patternHint">Lines containing this pattern will be extracted and deduplicated</div>
+                <div class="error-message" id="regexError">Invalid regular expression</div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="regexToggle">
+                    <label for="regexToggle">Enable Regex (Regular Expression)</label>
+                </div>
+                
+                <div class="settings-divider"></div>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" id="deduplicateToggle" checked>
+                    <label for="deduplicateToggle">Remove Duplicate Consecutive Logs</label>
+                </div>
+            </div>
 
-        <input type="file" id="fileInput" accept=".txt">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-icon">📁</div>
+                <div class="drop-text">DRAG & DROP YOUR LOG FILE HERE</div>
+                <div class="drop-subtext">or click to browse</div>
+            </div>
 
-        <div class="processing" id="processing">
-            <div class="spinner"></div>
-            <div>Processing your file...</div>
-        </div>
+            <input type="file" id="fileInput" accept=".txt">
 
-        <div class="stats" id="stats">
-            <div class="stat-item">
-                <span class="stat-label">File Name:</span>
-                <span class="stat-value" id="fileName">-</span>
+            <div class="processing" id="processing">
+                <div class="spinner"></div>
+                <div>PROCESSING YOUR FILE...</div>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">File Size:</span>
-                <span class="stat-value" id="fileSize">-</span>
+
+            <div class="stats" id="stats">
+                <div class="stat-item">
+                    <span class="stat-label">File Name:</span>
+                    <span class="stat-value" id="fileName">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">File Size:</span>
+                    <span class="stat-value" id="fileSize">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Lines:</span>
+                    <span class="stat-value" id="totalLines">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Analytics Events Found:</span>
+                    <span class="stat-value" id="eventsFound">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Duplicates Removed:</span>
+                    <span class="stat-value" id="duplicatesRemoved">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Unique Events:</span>
+                    <span class="stat-value" id="uniqueEvents">-</span>
+                </div>
+                <div class="success-message">✅ FILE SANITIZED AND DOWNLOADED SUCCESSFULLY!</div>
             </div>
-            <div class="stat-item">
-                <span class="stat-label">Total Lines:</span>
-                <span class="stat-value" id="totalLines">-</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Analytics Events Found:</span>
-                <span class="stat-value" id="eventsFound">-</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Duplicates Removed:</span>
-                <span class="stat-value" id="duplicatesRemoved">-</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Unique Events:</span>
-                <span class="stat-value" id="uniqueEvents">-</span>
-            </div>
-            <div class="success-message">✅ File sanitized and downloaded successfully!</div>
         </div>
     </div>
 
