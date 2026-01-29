@@ -3,107 +3,582 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JSON HTML/Base64 Previewer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>JSON HTML/Base64 Previewer - Quick Dev Tools</title>
   <style>
-    /* Cleaner scrollbars */
-    .scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-    .scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-    .scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-    .scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #00ff00;
+      height: 100vh;
+      width: 100vw;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 0, 0.03) 0px,
+        rgba(0, 255, 0, 0.03) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(transparent, rgba(0, 255, 0, 0.3), transparent);
+      animation: scanline 8s linear infinite;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .terminal {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.8);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .terminal-header {
+      background: #001a00;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #00ff00;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .terminal-button {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #00ff00;
+      box-shadow: 0 0 5px #00ff00;
+    }
+
+    .terminal-title {
+      margin-left: auto;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .back-link {
+      color: #00ff00;
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+      border-radius: 2px;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .back-link:hover {
+      background: rgba(0, 255, 0, 0.1);
+      border-color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+    }
+
+    /* Page Header */
+    .page-header {
+      padding: 1rem 1.5rem 0.5rem;
+      border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+      flex-shrink: 0;
+    }
+
+    .page-header h1 {
+      font-size: 1.2rem;
+      text-shadow: 0 0 10px #00ff00;
+      margin-bottom: 0.25rem;
+    }
+
+    .page-header p {
+      font-size: 0.75rem;
+      color: #00aa00;
+      opacity: 0.7;
+      line-height: 1.4;
+    }
+
+    .page-header .hint-text {
+      font-size: 0.7rem;
+      color: #00aa00;
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+
+    /* Controls Section */
+    .controls-section {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+      flex-shrink: 0;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (min-width: 1024px) {
+      .controls-grid {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #00ff00;
+      margin-bottom: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(0, 255, 0, 0.3);
+      border-radius: 2px;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      resize: none;
+      height: 5rem;
+      transition: all 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    }
+
+    textarea::placeholder {
+      color: rgba(0, 255, 0, 0.4);
+    }
+
+    /* Scrollbar styling */
+    textarea::-webkit-scrollbar,
+    .carousel::-webkit-scrollbar,
+    .card-body::-webkit-scrollbar,
+    .fullscreen-body::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    textarea::-webkit-scrollbar-track,
+    .carousel::-webkit-scrollbar-track,
+    .card-body::-webkit-scrollbar-track,
+    .fullscreen-body::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    textarea::-webkit-scrollbar-thumb,
+    .carousel::-webkit-scrollbar-thumb,
+    .card-body::-webkit-scrollbar-thumb,
+    .fullscreen-body::-webkit-scrollbar-thumb {
+      background: rgba(0, 255, 0, 0.3);
+      border-radius: 4px;
+    }
+
+    textarea::-webkit-scrollbar-thumb:hover,
+    .carousel::-webkit-scrollbar-thumb:hover,
+    .card-body::-webkit-scrollbar-thumb:hover,
+    .fullscreen-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 255, 0, 0.5);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid #00ff00;
+      border-radius: 2px;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: rgba(0, 255, 0, 0.2);
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+      text-shadow: 0 0 5px #00ff00;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .btn-secondary {
+      background: rgba(0, 255, 0, 0.05);
+      border-color: rgba(0, 255, 0, 0.5);
+    }
+
+    .error-message {
+      color: #ff0000;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .error-message.show {
+      display: inline-block;
+    }
+
+    /* Preview Carousel */
+    .carousel-container {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .carousel {
+      height: 100%;
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+    }
+
+    .empty-state {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00aa00;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    /* Card */
+    .card {
+      scroll-snap-align: start;
+      flex-shrink: 0;
+      width: 100%;
+      min-width: 600px;
+      max-width: 900px;
+      border-radius: 2px;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+      background: rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        width: 50%;
+      }
+    }
+
+    .card-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .card-header-left {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-subtitle {
+      font-size: 0.75rem;
+      color: #00aa00;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-body {
+      padding: 1rem;
+      overflow: auto;
+      max-height: 65vh;
+      min-height: 40vh;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .fullscreen-btn {
+      flex-shrink: 0;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    /* Iframe styling */
+    iframe {
+      width: 100%;
+      height: 65vh;
+      background: #000;
+      border-radius: 2px;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+    }
+
+    /* Pre/text styling */
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+      color: #00ff00;
+      line-height: 1.5;
+    }
+
+    /* Fullscreen Modal */
+    .fullscreen-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+    }
+
+    .fullscreen-modal.show {
+      display: block;
+    }
+
+    .fullscreen-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .fullscreen-container {
+      position: absolute;
+      inset: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (min-width: 768px) {
+      .fullscreen-container {
+        padding: 2rem;
+      }
+    }
+
+    .fullscreen-content {
+      background: rgba(0, 0, 0, 0.95);
+      border-radius: 4px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .fullscreen-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .fullscreen-header-left {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .fullscreen-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fullscreen-subtitle {
+      font-size: 0.75rem;
+      color: #00aa00;
+      opacity: 0.7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fullscreen-body {
+      flex: 1;
+      overflow: auto;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem;
+    }
+
+    .fullscreen-body iframe {
+      height: 80vh;
+    }
+
+    @media (max-width: 768px) {
+      .page-header {
+        padding: 0.75rem 1rem 0.5rem;
+      }
+
+      .page-header h1 {
+        font-size: 1rem;
+      }
+
+      .page-header p {
+        display: none;
+      }
+
+      .controls-section {
+        padding: 0.75rem 1rem;
+      }
+
+      .carousel {
+        padding: 0.75rem 1rem;
+      }
+
+      .card {
+        min-width: 100%;
+      }
+    }
   </style>
 </head>
 
-<body class="h-screen w-screen p-0 bg-white flex flex-col overflow-hidden text-gray-800">
+<body>
+  <div class="terminal">
+    <!-- Terminal Header -->
+    <div class="terminal-header">
+      <div class="terminal-button"></div>
+      <div class="terminal-button"></div>
+      <div class="terminal-button"></div>
+      <a href="index.html" class="back-link">← BACK</a>
+      <div class="terminal-title">root@devtools:~/json-previewer#</div>
+    </div>
 
-  <!-- Header -->
-  <div class="px-4 md:px-6 py-2 border-b border-gray-200 shrink-0">
-    <h1 class="text-lg font-semibold">JSON HTML/Base64 Previewer</h1>
-    <p class="text-[11px] text-gray-500 mt-0.5 hidden md:block">
-      Paste a response JSON, choose keys (supports dot-path like <span class="font-mono">data.invoicePdfContent</span>),
-      and previews will appear in the carousel below.
-    </p>
-  </div>
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>📊 JSON HTML/BASE64 PREVIEWER</h1>
+      <p class="hint-text">
+        Paste a response JSON, choose keys (supports dot-path like <span style="opacity: 1;">data.invoicePdfContent</span>),
+        and previews will appear in the carousel below.
+      </p>
+    </div>
 
-  <!-- Controls -->
-  <div class="flex flex-col gap-2 px-4 md:px-6 py-2 border-b border-gray-200 shrink-0">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 items-end">
-      <div class="lg:col-span-2">
-        <label for="jsonInput" class="text-sm font-medium">Response JSON</label>
-        <textarea
-          id="jsonInput"
-          class="w-full mt-1 rounded border border-gray-300 px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none scrollbar"
-          placeholder='Paste JSON. Example: { "htmlContent": "...", "invoicePdfContent": "..." }'
-          autocomplete="off"
-          spellcheck="false"
-        ></textarea>
+    <!-- Controls -->
+    <div class="controls-section">
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="jsonInput">RESPONSE JSON</label>
+          <textarea
+            id="jsonInput"
+            placeholder='Paste JSON. Example: { "htmlContent": "...", "invoicePdfContent": "..." }'
+            autocomplete="off"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <div class="control-group">
+          <label for="keysInput">KEYS TO PREVIEW</label>
+          <textarea
+            id="keysInput"
+            placeholder="One per line or comma-separated&#10;htmlContent&#10;data.invoicePdfContent&#10;pdfContent"
+            autocomplete="off"
+            spellcheck="false"
+          ></textarea>
+        </div>
       </div>
 
-      <div>
-        <label for="keysInput" class="text-sm font-medium">Keys to preview</label>
-        <textarea
-          id="keysInput"
-          class="w-full mt-1 rounded border border-gray-300 px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none scrollbar"
-          placeholder="One per line or comma-separated&#10;htmlContent&#10;data.invoicePdfContent&#10;pdfContent"
-          autocomplete="off"
-          spellcheck="false"
-        ></textarea>
+      <div class="button-group">
+        <button id="parseBtn">🔍 PARSE & PREVIEW</button>
+        <button id="clearBtn" class="btn-secondary">CLEAR</button>
+        <span id="jsonError" class="error-message"></span>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 flex-wrap">
-      <button
-        id="parseBtn"
-        class="inline-flex items-center rounded bg-blue-600 text-white text-sm font-medium px-3 py-1.5 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-      >
-        Parse & Preview
-      </button>
-      <button
-        id="clearBtn"
-        class="inline-flex items-center rounded bg-gray-100 text-gray-900 text-sm font-medium px-3 py-1.5 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
-      >
-        Clear
-      </button>
-
-      <span id="jsonError" class="text-red-600 text-sm hidden"></span>
-    </div>
-  </div>
-
-  <!-- Preview Carousel -->
-  <div class="flex-1 min-h-0 overflow-hidden">
-
-    <div class="flex-1 min-h-0 overflow-hidden">
-      <div
-        id="previewCarousel"
-        class="h-full flex gap-4 p-4 md:px-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar"
-      >
-        <div id="emptyState" class="min-w-full h-full flex items-center justify-center text-gray-400 text-sm">
-          Add keys and click “Parse & Preview”.
+    <!-- Preview Carousel -->
+    <div class="carousel-container">
+      <div id="previewCarousel" class="carousel">
+        <div id="emptyState" class="empty-state">
+          Add keys and click "Parse & Preview".
         </div>
       </div>
     </div>
   </div>
-
 
   <!-- Fullscreen Modal -->
-  <div id="fullscreenModal" class="fixed inset-0 z-50 hidden">
-    <div id="fullscreenBackdrop" class="absolute inset-0 bg-black/50"></div>
-    <div class="absolute inset-0 p-3 md:p-6 flex flex-col">
-      <div class="bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col h-full overflow-hidden">
-        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-3">
-          <div class="min-w-0">
-            <div id="fullscreenTitle" class="text-sm font-semibold truncate"></div>
-            <div id="fullscreenSubtitle" class="text-xs text-gray-500 truncate"></div>
+  <div id="fullscreenModal" class="fullscreen-modal">
+    <div id="fullscreenBackdrop" class="fullscreen-backdrop"></div>
+    <div class="fullscreen-container">
+      <div class="fullscreen-content">
+        <div class="fullscreen-header">
+          <div class="fullscreen-header-left">
+            <div id="fullscreenTitle" class="fullscreen-title"></div>
+            <div id="fullscreenSubtitle" class="fullscreen-subtitle"></div>
           </div>
-          <button id="fullscreenClose" class="shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
-            Close
-          </button>
+          <button id="fullscreenClose">CLOSE</button>
         </div>
-        <div id="fullscreenBody" class="flex-1 overflow-auto bg-gray-50 p-3 md:p-4 scrollbar"></div>
+        <div id="fullscreenBody" class="fullscreen-body"></div>
       </div>
     </div>
   </div>
-
 
 <script>
   // -------------------------
@@ -262,10 +737,10 @@
     fullscreenClose: document.getElementById("fullscreenClose"),
     fullscreenTitle: document.getElementById("fullscreenTitle"),
     fullscreenSubtitle: document.getElementById("fullscreenSubtitle"),
-    fullscreenBody: document.getElementById("fullscreenBody"),  };
+    fullscreenBody: document.getElementById("fullscreenBody"),
+  };
 
   let activeBlobUrls = [];
-
 
   // -------------------------
   // Fullscreen modal
@@ -295,21 +770,16 @@
     els.fullscreenSubtitle.textContent = spec.subtitle || "";
     els.fullscreenBody.innerHTML = "";
     const node = buildNodeFromFullscreenSpec(spec);
-    // Make it truly full height inside modal
-    if (node && node.tagName === "IFRAME") {
-      node.className = "w-full h-[80vh] bg-white rounded-lg border border-gray-200";
-    }
     els.fullscreenBody.appendChild(node);
-    els.fullscreenModal.classList.remove("hidden");
-    document.body.classList.add("overflow-hidden");
+    els.fullscreenModal.classList.add("show");
+    document.body.style.overflow = "hidden";
   }
 
   function closeFullscreen() {
-    els.fullscreenModal.classList.add("hidden");
+    els.fullscreenModal.classList.remove("show");
     els.fullscreenBody.innerHTML = "";
-    document.body.classList.remove("overflow-hidden");
+    document.body.style.overflow = "";
   }
-
 
   function revokeAllBlobs() {
     activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
@@ -318,12 +788,12 @@
 
   function setError(msg) {
     if (!msg) {
-      els.jsonError.classList.add("hidden");
+      els.jsonError.classList.remove("show");
       els.jsonError.textContent = "";
       return;
     }
     els.jsonError.textContent = msg;
-    els.jsonError.classList.remove("hidden");
+    els.jsonError.classList.add("show");
   }
 
   function clearCarousel() {
@@ -331,41 +801,27 @@
     els.carousel.innerHTML = "";
     const empty = document.createElement("div");
     empty.id = "emptyState";
-    empty.className = "min-w-full h-full flex items-center justify-center text-gray-400 text-sm";
-    empty.textContent = "Add keys and click “Parse & Preview”.";
-    els.carousel.appendChild(empty);  }
+    empty.className = "empty-state";
+    empty.textContent = 'Add keys and click "Parse & Preview".';
+    els.carousel.appendChild(empty);
+  }
 
   function createCard({ title, subtitle, contentNode, fullscreenSpec }) {
     const card = document.createElement("div");
-    card.className = [
-      "snap-start",
-      "shrink-0",
-      "w-full",
-      "md:w-1/2",
-      "min-w-[600px]",
-      "max-w-[900px]",
-      "rounded-xl",
-      "border",
-      "border-gray-200",
-      "bg-white",
-      "shadow-sm",
-      "flex",
-      "flex-col",
-      "min-h-0"
-    ].join(" ");
+    card.className = "card";
 
     const header = document.createElement("div");
-    header.className = "px-4 py-3 border-b border-gray-200 flex items-start justify-between gap-3";
+    header.className = "card-header";
 
     const left = document.createElement("div");
-    left.className = "min-w-0";
+    left.className = "card-header-left";
 
     const h = document.createElement("div");
-    h.className = "text-sm font-semibold truncate";
+    h.className = "card-title";
     h.textContent = title;
 
     const sub = document.createElement("div");
-    sub.className = "text-xs text-gray-500 mt-0.5 truncate";
+    sub.className = "card-subtitle";
     sub.textContent = subtitle || "";
 
     left.appendChild(h);
@@ -374,15 +830,14 @@
 
     if (fullscreenSpec) {
       const fsBtn = document.createElement("button");
-      fsBtn.className = "shrink-0 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300";
-      fsBtn.textContent = "Full screen";
+      fsBtn.className = "fullscreen-btn";
+      fsBtn.textContent = "FULL SCREEN";
       fsBtn.addEventListener("click", () => openFullscreen(fullscreenSpec));
       header.appendChild(fsBtn);
     }
 
     const body = document.createElement("div");
-    // Max height + scrollable body
-    body.className = "p-3 md:p-4 overflow-auto scrollbar max-h-[65vh] min-h-[40vh] bg-gray-50";
+    body.className = "card-body";
     body.appendChild(contentNode);
 
     card.appendChild(header);
@@ -392,7 +847,6 @@
 
   function makeIframe() {
     const iframe = document.createElement("iframe");
-    iframe.className = "w-full h-[65vh] bg-white rounded-lg border border-gray-200";
     iframe.setAttribute("title", "Preview");
     // Keep it fairly permissive for HTML previews that include inline scripts/styles
     iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
@@ -401,7 +855,6 @@
 
   function makePre(text) {
     const pre = document.createElement("pre");
-    pre.className = "whitespace-pre-wrap break-words text-xs font-mono text-gray-800";
     pre.textContent = text || "";
     return pre;
   }
@@ -426,7 +879,6 @@
       activeBlobUrls.push(url);
 
       const iframe = makeIframe();
-      // PDF viewers are scrollable inside the iframe.
       iframe.removeAttribute("sandbox");
       iframe.src = url;
 
@@ -434,8 +886,6 @@
         title: key,
         subtitle: "PDF (base64)",
         contentNode: iframe,
-        // IMPORTANT: fullscreen must use the same blob URL as the inline preview.
-        // Using srcdoc here would render a blank iframe instead of the PDF.
         fullscreenSpec: { type: "pdf", title: key, subtitle: "PDF (base64)", src: url }
       });
     }
@@ -501,14 +951,12 @@
     revokeAllBlobs();
     els.carousel.innerHTML = "";
 
-    let renderedCount = 0;
-
     keys.forEach((k) => {
       const v = getByPath(parsed, k);
       const card = renderPreviewForKey(k, v);
       els.carousel.appendChild(card);
-      renderedCount++;
-    });  }
+    });
+  }
 
   // -------------------------
   // Events
@@ -521,16 +969,14 @@
     clearCarousel();
   });
 
-
   // Fullscreen modal controls
   els.fullscreenClose.addEventListener("click", closeFullscreen);
   els.fullscreenBackdrop.addEventListener("click", closeFullscreen);
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !els.fullscreenModal.classList.contains("hidden")) {
+    if (e.key === "Escape" && els.fullscreenModal.classList.contains("show")) {
       closeFullscreen();
     }
   });
-
 
   // Initialize
   window.addEventListener("load", () => {
