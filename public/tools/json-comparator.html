@@ -3,524 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JSON Comparator - Quick Dev Tools</title>
+  <title>JSON Comparator</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
-
-    @keyframes scanline {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(100%); }
-    }
-
     body {
-      font-family: 'Courier New', monospace;
-      background: #0a0a0a;
-      color: #00ff00;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      padding: 2rem;
-      position: relative;
-      overflow-x: hidden;
+      padding: 2rem 0;
     }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 255, 0, 0.03) 0px,
-        rgba(0, 255, 0, 0.03) 1px,
-        transparent 1px,
-        transparent 2px
-      );
-      pointer-events: none;
-      z-index: 2;
+    .main-card {
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
-
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: linear-gradient(transparent, rgba(0, 255, 0, 0.3), transparent);
-      animation: scanline 8s linear infinite;
-      pointer-events: none;
-      z-index: 3;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-
-    .terminal {
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #00ff00;
-      border-radius: 4px;
-      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 100px rgba(0, 255, 0, 0.05);
-      margin-bottom: 1.5rem;
-    }
-
-    .terminal-header {
-      background: #001a00;
-      padding: 0.5rem 1rem;
-      border-bottom: 1px solid #00ff00;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .terminal-button {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #00ff00;
-      box-shadow: 0 0 5px #00ff00;
-    }
-
-    .terminal-title {
-      margin-left: auto;
-      font-size: 0.85rem;
-      opacity: 0.7;
-    }
-
-    .back-link {
-      color: #00ff00;
-      text-decoration: none;
-      padding: 0.25rem 0.5rem;
-      border: 1px solid rgba(0, 255, 0, 0.3);
-      border-radius: 2px;
-      font-size: 0.75rem;
-      transition: all 0.2s;
-    }
-
-    .back-link:hover {
-      background: rgba(0, 255, 0, 0.1);
-      border-color: #00ff00;
-      text-shadow: 0 0 5px #00ff00;
-    }
-
-    .terminal-body {
-      padding: 1.5rem;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      color: #00ff00;
-      text-shadow: 0 0 10px #00ff00;
-      margin-bottom: 0.5rem;
-    }
-
-    .subtitle {
-      font-size: 0.85rem;
-      color: #00aa00;
-      opacity: 0.7;
-      margin-bottom: 1.5rem;
-    }
-
-    .input-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    label {
-      font-size: 0.85rem;
-      color: #00ff00;
-      font-weight: 600;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 0.75rem;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid rgba(0, 255, 0, 0.3);
-      border-radius: 2px;
-      color: #00ff00;
-      font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
-      resize: vertical;
-      min-height: 250px;
-      transition: all 0.3s;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: #00ff00;
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-    }
-
-    textarea::placeholder {
-      color: rgba(0, 255, 0, 0.4);
-    }
-
-    textarea::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    textarea::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    textarea::-webkit-scrollbar-thumb {
-      background: rgba(0, 255, 0, 0.3);
-      border-radius: 4px;
-    }
-
-    textarea::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 255, 0, 0.5);
-    }
-
-    .error-message {
-      background: rgba(255, 0, 0, 0.1);
-      border: 1px solid #ff0000;
-      color: #ff0000;
-      padding: 0.75rem;
-      border-radius: 2px;
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
-      display: none;
-    }
-
-    .error-message.show {
-      display: block;
-    }
-
-    button {
-      width: 100%;
-      padding: 0.75rem 1.5rem;
-      background: rgba(0, 255, 0, 0.1);
-      border: 1px solid #00ff00;
-      border-radius: 2px;
-      color: #00ff00;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 600;
-    }
-
-    button:hover {
-      background: rgba(0, 255, 0, 0.2);
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-      text-shadow: 0 0 5px #00ff00;
-    }
-
-    button:active {
-      transform: translateY(1px);
-    }
-
-    /* Results Section */
-    .results {
-      display: none;
-    }
-
-    .results.show {
-      display: block;
-    }
-
     .comparison-section {
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid #00ff00;
-      border-radius: 4px;
-      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 100px rgba(0, 255, 0, 0.05);
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
       margin-bottom: 1.5rem;
-      padding: 1.5rem;
     }
-
-    .section-header {
-      font-size: 1.1rem;
-      color: #00ff00;
-      text-shadow: 0 0 8px #00ff00;
-      border-bottom: 1px solid rgba(0, 255, 0, 0.3);
-      padding-bottom: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .stats-badge {
-      display: inline-block;
-      padding: 0.4rem 0.75rem;
-      border-radius: 2px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-right: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .badge-added {
-      background-color: rgba(0, 255, 0, 0.2);
-      color: #00ff00;
-      border: 1px solid rgba(0, 255, 0, 0.5);
-    }
-
-    .badge-removed {
-      background-color: rgba(255, 0, 0, 0.2);
-      color: #ff0000;
-      border: 1px solid rgba(255, 0, 0, 0.5);
-    }
-
-    .badge-modified {
-      background-color: rgba(255, 255, 0, 0.2);
-      color: #ffff00;
-      border: 1px solid rgba(255, 255, 0, 0.5);
-    }
-
-    .success-alert {
-      background: rgba(0, 255, 0, 0.1);
-      border: 1px solid rgba(0, 255, 0, 0.3);
-      color: #00ff00;
-      padding: 1rem;
-      border-radius: 2px;
-      font-weight: 600;
-    }
-
-    .summary-text {
-      color: #00aa00;
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
-      opacity: 0.8;
-    }
-
     .diff-box {
-      border-radius: 2px;
+      border-radius: 0.5rem;
       padding: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
-
     .diff-added {
-      background-color: rgba(0, 255, 0, 0.1);
-      border-left: 3px solid #00ff00;
+      background-color: #d1f4e0;
+      border-left: 4px solid #28a745;
     }
-
     .diff-removed {
-      background-color: rgba(255, 0, 0, 0.1);
-      border-left: 3px solid #ff0000;
+      background-color: #fdd;
+      border-left: 4px solid #dc3545;
     }
-
     .diff-modified {
-      background-color: rgba(255, 255, 0, 0.1);
-      border-left: 3px solid #ffff00;
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
     }
-
     .diff-type-change {
-      background-color: rgba(255, 165, 0, 0.1);
-      border-left: 3px solid #ffa500;
+      background-color: #ffe5cc;
+      border-left: 4px solid #fd7e14;
     }
-
-    .diff-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      opacity: 0.8;
-    }
-
-    .diff-label.old {
-      color: #ff0000;
-    }
-
-    .diff-label.new {
-      color: #00ff00;
-    }
-
     .value-display {
       font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
+      font-size: 0.9rem;
       padding: 0.5rem;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(0, 255, 0, 0.2);
-      border-radius: 2px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 0.25rem;
       word-break: break-all;
       max-height: 300px;
       overflow-y: auto;
     }
-
-    .value-display::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .value-display::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    .value-display::-webkit-scrollbar-thumb {
-      background: rgba(0, 255, 0, 0.3);
-      border-radius: 4px;
-    }
-
-    .value-display::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 255, 0, 0.5);
-    }
-
     .value-null {
-      color: #aa00ff;
+      color: #6f42c1;
       font-weight: 600;
     }
-
     .value-undefined {
-      color: #888;
+      color: #6c757d;
       font-style: italic;
     }
-
     .value-string {
-      color: #00aaff;
+      color: #0d6efd;
     }
-
     .value-number {
-      color: #00ff00;
+      color: #198754;
     }
-
     .value-boolean {
-      color: #ffaa00;
+      color: #fd7e14;
     }
-
+    textarea {
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+    }
     pre {
       margin: 0;
       white-space: pre-wrap;
       word-break: break-word;
-      color: #00ff00;
     }
-
-    .success-message {
-      color: #00ff00;
+    .section-header {
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .stats-badge {
+      display: inline-block;
+      padding: 0.35rem 0.65rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
       font-weight: 600;
-      text-shadow: 0 0 5px #00ff00;
+      margin-right: 0.5rem;
     }
-
-    .diff-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+    .badge-added {
+      background-color: #d1f4e0;
+      color: #155724;
     }
-
-    .diff-column {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    .badge-removed {
+      background-color: #fdd;
+      color: #721c24;
     }
-
-    .diff-type-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: #00ff00;
-    }
-
-    .path-code {
-      color: #00aaff;
-      background: rgba(0, 170, 255, 0.1);
-      padding: 0.1rem 0.3rem;
-      border-radius: 2px;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: 1rem;
-      }
-
-      .input-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .diff-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .terminal-body {
-        padding: 1rem;
-      }
-
-      h1 {
-        font-size: 1.2rem;
-      }
-
-      textarea {
-        min-height: 200px;
-      }
+    .badge-modified {
+      background-color: #fff3cd;
+      color: #856404;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="terminal">
-      <div class="terminal-header">
-        <div class="terminal-button"></div>
-        <div class="terminal-button"></div>
-        <div class="terminal-button"></div>
-        <a href="index.html" class="back-link">← BACK</a>
-        <div class="terminal-title">root@devtools:~/json-comparator#</div>
-      </div>
-      <div class="terminal-body">
-        <h1>🔍 JSON COMPARATOR</h1>
-        <p class="subtitle">Compare two JSON objects with automatic key sorting (objects only, arrays preserve order)</p>
+    <div class="card main-card">
+      <div class="card-body p-4">
+        <h1 class="display-5 fw-bold text-dark mb-2">JSON Comparator</h1>
+        <p class="text-muted mb-4">Compare two JSON objects with automatic key sorting (objects only, arrays preserve order)</p>
 
-        <div class="input-grid">
-          <div class="input-group">
-            <label>OLD JSON</label>
-            <textarea id="oldJson" placeholder='{"name": "John", "age": 30}'></textarea>
-            <div id="oldError" class="error-message"></div>
+        <div class="row g-4 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Old JSON</label>
+            <textarea id="oldJson" class="form-control" rows="12" placeholder='{"name": "John", "age": 30}'></textarea>
+            <div id="oldError" class="alert alert-danger mt-2 d-none" role="alert"></div>
           </div>
-          <div class="input-group">
-            <label>NEW JSON</label>
-            <textarea id="newJson" placeholder='{"age": 31, "name": "John", "city": "NYC"}'></textarea>
-            <div id="newError" class="error-message"></div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">New JSON</label>
+            <textarea id="newJson" class="form-control" rows="12" placeholder='{"age": 31, "name": "John", "city": "NYC"}'></textarea>
+            <div id="newError" class="alert alert-danger mt-2 d-none" role="alert"></div>
           </div>
         </div>
 
-        <button id="compareBtn" onclick="handleCompare()">
-          🔍 COMPARE JSON
+        <button id="compareBtn" class="btn btn-primary btn-lg w-100" onclick="handleCompare()">
+          Compare JSON
         </button>
       </div>
     </div>
 
-    <div id="results" class="results">
+    <div id="results" class="mt-4 d-none">
       <!-- Summary -->
-      <div class="comparison-section">
-        <h2 class="section-header">COMPARISON SUMMARY</h2>
-        <div id="summary"></div>
+      <div class="card comparison-section">
+        <div class="card-body">
+          <h2 class="h4 section-header">Comparison Summary</h2>
+          <div id="summary"></div>
+        </div>
       </div>
 
       <!-- Sorted JSON Preview -->
-      <div class="comparison-section">
-        <h2 class="section-header">SORTED JSON PREVIEW</h2>
-        <div class="diff-grid">
-          <div class="diff-column">
-            <div class="diff-label old">OLD JSON (Sorted)</div>
-            <pre id="oldSorted" class="value-display"></pre>
-          </div>
-          <div class="diff-column">
-            <div class="diff-label new">NEW JSON (Sorted)</div>
-            <pre id="newSorted" class="value-display"></pre>
+      <div class="card comparison-section">
+        <div class="card-body">
+          <h2 class="h4 section-header">Sorted JSON Preview</h2>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="fw-semibold text-secondary small mb-2">OLD JSON (Sorted)</div>
+              <pre id="oldSorted" class="value-display"></pre>
+            </div>
+            <div class="col-md-6">
+              <div class="fw-semibold text-secondary small mb-2">NEW JSON (Sorted)</div>
+              <pre id="newSorted" class="value-display"></pre>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Differences -->
-      <div class="comparison-section">
-        <h2 class="section-header">DETAILED DIFFERENCES</h2>
-        <div id="differences"></div>
+      <div class="card comparison-section">
+        <div class="card-body">
+          <h2 class="h4 section-header">Detailed Differences</h2>
+          <div id="differences"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -690,8 +332,8 @@
       const oldJsonText = document.getElementById('oldJson').value.trim();
       const newJsonText = document.getElementById('newJson').value.trim();
 
-      document.getElementById('oldError').classList.remove('show');
-      document.getElementById('newError').classList.remove('show');
+      document.getElementById('oldError').classList.add('d-none');
+      document.getElementById('newError').classList.add('d-none');
 
       if (!oldJsonText || !newJsonText) {
         alert('Please enter both JSON objects');
@@ -704,7 +346,7 @@
         oldJson = JSON.parse(oldJsonText);
       } catch (e) {
         document.getElementById('oldError').textContent = `Invalid JSON: ${e.message}`;
-        document.getElementById('oldError').classList.add('show');
+        document.getElementById('oldError').classList.remove('d-none');
         return;
       }
 
@@ -712,7 +354,7 @@
         newJson = JSON.parse(newJsonText);
       } catch (e) {
         document.getElementById('newError').textContent = `Invalid JSON: ${e.message}`;
-        document.getElementById('newError').classList.add('show');
+        document.getElementById('newError').classList.remove('d-none');
         return;
       }
 
@@ -731,7 +373,7 @@
     }
 
     function displayResults() {
-      document.getElementById('results').classList.add('show');
+      document.getElementById('results').classList.remove('d-none');
 
       // Summary
       const summary = document.getElementById('summary');
@@ -740,15 +382,15 @@
       const modified = comparisonData.differences.filter(d => d.type === 'modified' || d.type === 'type_change' || d.type === 'array_change').length;
 
       if (comparisonData.differences.length === 0) {
-        summary.innerHTML = '<div class="success-alert">✓ JSON objects are identical (after sorting keys)</div>';
+        summary.innerHTML = '<div class="alert alert-success fw-semibold">✓ JSON objects are identical (after sorting keys)</div>';
       } else {
         summary.innerHTML = `
-          <div>
+          <div class="mb-3">
             <span class="stats-badge badge-added">➕ ${added} Added</span>
             <span class="stats-badge badge-removed">➖ ${removed} Removed</span>
             <span class="stats-badge badge-modified">✏️ ${modified} Modified</span>
           </div>
-          <div class="summary-text">Total differences: ${comparisonData.differences.length}</div>
+          <div class="text-muted small">Total differences: ${comparisonData.differences.length}</div>
         `;
       }
 
@@ -764,16 +406,16 @@
           const typeLabel = diff.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
           html += `
             <div class="diff-box ${getDiffClass(diff.type)}">
-              <div class="diff-type-label">
-                ${getDiffIcon(diff.type)} ${typeLabel}: <span class="path-code">${diff.path}</span>
+              <div class="fw-semibold small mb-2">
+                ${getDiffIcon(diff.type)} ${typeLabel}: <code class="text-primary">${diff.path}</code>
               </div>
-              <div class="diff-grid">
-                <div class="diff-column">
-                  <div class="diff-label old">OLD VALUE</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="fw-semibold text-secondary small mb-2">OLD VALUE</div>
                   <div class="value-display">${renderValue(diff.old)}</div>
                 </div>
-                <div class="diff-column">
-                  <div class="diff-label new">NEW VALUE</div>
+                <div class="col-md-6">
+                  <div class="fw-semibold text-secondary small mb-2">NEW VALUE</div>
                   <div class="value-display">${renderValue(diff.new)}</div>
                 </div>
               </div>
@@ -782,7 +424,7 @@
         });
         diffContainer.innerHTML = html;
       } else {
-        diffContainer.innerHTML = '<div class="success-message">✓ No differences found</div>';
+        diffContainer.innerHTML = '<div class="text-success fw-semibold">✓ No differences found</div>';
       }
 
       document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
