@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudinary Downscaling Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .panel h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .upload-zone.active {
+            border-color: #764ba2;
+            background: #e8e9ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .image-preview {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .image-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f1ff;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-image-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 133.33%; /* 3:4 ratio */
+            background: #f0f0f0;
+            overflow: hidden;
+        }
+
+        .card-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 1rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-meta {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .process-flow {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .flow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin-top: 1.5rem;
+        }
+
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20%;
+            top: 30%;
+            font-size: 2rem;
+            color: #667eea;
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .controls {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .dimension-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .dimension-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dimension-input-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.4rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.6rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #764ba2;
+        }
+
+        .slider-value {
+            text-align: right;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .sample-images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .sample-btn {
+            padding: 0.8rem;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .sample-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .lock-ratio {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+            padding: 0.6rem;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .lock-ratio input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .lock-ratio label {
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-steps {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .flow-step:not(:last-child)::after {
+                content: '↓';
+                right: auto;
+                top: auto;
+                bottom: -2rem;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .dimension-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Cropping Visualization Styles */
+        .crop-comparison {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .crop-panel-single {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .crop-title {
+            color: #333;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .crop-container-single {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 2rem;
+            min-height: 500px;
+        }
+
+        .crop-visualization {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        #cropPreviewImg {
+            display: block;
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .crop-frame {
+            position: absolute;
+            border: 4px solid #f5576c;
+            box-sizing: border-box;
+            pointer-events: none;
+            z-index: 10;
+            background: rgba(245, 87, 108, 0.1);
+        }
+
+        .crop-frame-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f5576c;
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+        }
+
+        .cropped-regions {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .cropped-region {
+            position: absolute;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.4),
+                rgba(0, 0, 0, 0.4) 10px,
+                rgba(0, 0, 0, 0.5) 10px,
+                rgba(0, 0, 0, 0.5) 20px
+            );
+        }
+
+        .crop-legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
+
+        .legend-box.visible {
+            background: rgba(245, 87, 108, 0.1);
+            border-color: #f5576c;
+            border-width: 3px;
+        }
+
+        .legend-box.cropped {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0, 0, 0, 0.4),
+                rgba(0, 0, 0, 0.4) 5px,
+                rgba(0, 0, 0, 0.5) 5px,
+                rgba(0, 0, 0, 0.5) 10px
+            );
+        }
+
+        .legend-item span {
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .placeholder-content {
+            color: #999;
+            text-align: center;
+        }
+
+        .crop-stats {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f0f1ff;
+            border-radius: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        @media (max-width: 968px) {
+            .crop-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ Cloudinary Downscaling Simulator</h1>
+            <p class="subtitle">See how images are optimized and fitted into 3:4 card frames</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Upload Section -->
+            <div class="panel">
+                <h2>1. Upload Your Image</h2>
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📤</div>
+                    <p style="color: #667eea; font-weight: 600; margin-bottom: 0.5rem;">Click or drag image here</p>
+                    <p style="color: #888; font-size: 0.9rem;">Supports JPG, PNG, WebP</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="sample-images">
+                    <button class="sample-btn" onclick="loadSampleImage('landscape')">Landscape</button>
+                    <button class="sample-btn" onclick="loadSampleImage('portrait')">Portrait</button>
+                    <button class="sample-btn" onclick="loadSampleImage('grid')">Grid</button>
+                </div>
+
+                <div id="originalPreview" class="hidden">
+                    <div class="image-preview">
+                        <h3 style="color: #333; margin-bottom: 1rem;">Original Image</h3>
+                        <img id="originalImg" alt="Original">
+                    </div>
+                    <div class="image-info" id="originalInfo"></div>
+                </div>
+            </div>
+
+            <!-- Downscaled Preview -->
+            <div class="panel">
+                <h2>2. Cloudinary Downscaled</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="control-label">Dimension Controls</label>
+                        <div class="dimension-controls">
+                            <div class="dimension-input-group">
+                                <label>Width (px)</label>
+                                <input type="number" id="widthInput" value="1080" min="100" max="5000" step="10">
+                            </div>
+                            <div class="dimension-input-group">
+                                <label>Height (px)</label>
+                                <input type="number" id="heightInput" value="1080" min="100" max="5000" step="10">
+                            </div>
+                        </div>
+                        <div class="lock-ratio">
+                            <input type="checkbox" id="lockRatio" checked>
+                            <label for="lockRatio">🔒 Lock aspect ratio</label>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Width Slider</label>
+                        <input type="range" id="widthSlider" min="100" max="3000" value="1080" step="10">
+                        <div class="slider-value" id="widthSliderValue">1080 px</div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Height Slider</label>
+                        <input type="range" id="heightSlider" min="100" max="3000" value="1080" step="10">
+                        <div class="slider-value" id="heightSliderValue">1080 px</div>
+                    </div>
+                </div>
+                <div id="downscaledPreview" class="hidden">
+                    <div class="image-preview">
+                        <img id="downscaledImg" alt="Downscaled">
+                    </div>
+                    <div class="image-info" id="downscaledInfo"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Flow -->
+        <div class="process-flow">
+            <h2 style="color: #333; margin-bottom: 1rem;">Transformation Process</h2>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-icon">📷</div>
+                    <div class="step-title">Original Upload</div>
+                    <div class="step-desc">Full resolution image</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon">⚙️</div>
+                    <div class="step-title">Cloudinary Downscale</div>
+                    <div class="step-desc">Custom dimensions, proportional</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon">🖼️</div>
+                    <div class="step-title">Fit to 3:4 Frame</div>
+                    <div class="step-desc">Cover crop for card display</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Grid Display -->
+        <div class="panel" style="margin-top: 2rem;">
+            <h2>3. Card Grid Display (3:4 Ratio)</h2>
+            <p style="color: #666; margin-bottom: 1rem;">This is how your image appears in a list of cards with 3:4 aspect ratio frames</p>
+            <div class="card-grid" id="cardGrid">
+                <div class="card">
+                    <div class="card-image-container">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; text-align: center;">
+                            <div style="font-size: 3rem;">🖼️</div>
+                            <div>Upload an image to preview</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Sample Card 1</div>
+                        <div class="card-meta">3:4 aspect ratio • Cover fit</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-image-container">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; text-align: center;">
+                            <div style="font-size: 3rem;">🖼️</div>
+                            <div>Upload an image to preview</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Sample Card 2</div>
+                        <div class="card-meta">3:4 aspect ratio • Cover fit</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-image-container">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; text-align: center;">
+                            <div style="font-size: 3rem;">🖼️</div>
+                            <div>Upload an image to preview</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">Sample Card 3</div>
+                        <div class="card-meta">3:4 aspect ratio • Cover fit</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cropping Visualization -->
+        <div class="panel" style="margin-top: 2rem;">
+            <h2>4. Cropping Visualization</h2>
+            <p style="color: #666; margin-bottom: 1rem;">See how the downscaled image is cropped to fit the 3:4 aspect ratio frame</p>
+            
+            <div class="crop-comparison">
+                <div class="crop-panel-single">
+                    <h3 class="crop-title">Image with 3:4 Crop Overlay</h3>
+                    <div class="crop-container-single">
+                        <div id="cropVisualization" class="crop-visualization">
+                            <img id="cropPreviewImg" src="" alt="Crop preview" style="display: none;">
+                            <div class="crop-frame" id="cropFrame">
+                                <div class="crop-frame-label">Visible in 3:4 Card</div>
+                            </div>
+                            <div class="cropped-regions" id="croppedRegions"></div>
+                            <div class="placeholder-content">
+                                <div style="font-size: 3rem;">✂️</div>
+                                <div>Upload image to see cropping</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="crop-legend">
+                        <div class="legend-item">
+                            <div class="legend-box visible"></div>
+                            <span>Visible in card (3:4 ratio)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box cropped"></div>
+                            <span>Cropped area (not visible)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crop-stats" id="cropStats" style="display: none;">
+                <h3 style="color: #333; margin-bottom: 1rem;">Cropping Details</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Original Aspect</div>
+                        <div class="stat-value" id="originalAspect">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Target Aspect (3:4)</div>
+                        <div class="stat-value">0.75:1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Cropped Area</div>
+                        <div class="stat-value" id="croppedPercent">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Crop Direction</div>
+                        <div class="stat-value" id="cropDirection">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const widthInput = document.getElementById('widthInput');
+        const heightInput = document.getElementById('heightInput');
+        const widthSlider = document.getElementById('widthSlider');
+        const heightSlider = document.getElementById('heightSlider');
+        const widthSliderValue = document.getElementById('widthSliderValue');
+        const heightSliderValue = document.getElementById('heightSliderValue');
+        const lockRatio = document.getElementById('lockRatio');
+        
+        let originalImage = null;
+        let originalAspectRatio = 1;
+        let isUpdating = false;
+
+        // Upload zone interactions
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('active');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('active');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('active');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImageFile(file);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleImageFile(file);
+            }
+        });
+
+        // Width input
+        widthInput.addEventListener('input', () => {
+            if (isUpdating) return;
+            const width = parseInt(widthInput.value);
+            updateDimensions('width', width);
+        });
+
+        // Height input
+        heightInput.addEventListener('input', () => {
+            if (isUpdating) return;
+            const height = parseInt(heightInput.value);
+            updateDimensions('height', height);
+        });
+
+        // Width slider
+        widthSlider.addEventListener('input', () => {
+            if (isUpdating) return;
+            const width = parseInt(widthSlider.value);
+            updateDimensions('width', width);
+        });
+
+        // Height slider
+        heightSlider.addEventListener('input', () => {
+            if (isUpdating) return;
+            const height = parseInt(heightSlider.value);
+            updateDimensions('height', height);
+        });
+
+        function updateDimensions(changed, value) {
+            isUpdating = true;
+            
+            if (changed === 'width') {
+                widthInput.value = value;
+                widthSlider.value = value;
+                widthSliderValue.textContent = `${value} px`;
+                
+                if (lockRatio.checked && originalImage) {
+                    const newHeight = Math.round(value / originalAspectRatio);
+                    heightInput.value = newHeight;
+                    heightSlider.value = newHeight;
+                    heightSliderValue.textContent = `${newHeight} px`;
+                }
+            } else {
+                heightInput.value = value;
+                heightSlider.value = value;
+                heightSliderValue.textContent = `${value} px`;
+                
+                if (lockRatio.checked && originalImage) {
+                    const newWidth = Math.round(value * originalAspectRatio);
+                    widthInput.value = newWidth;
+                    widthSlider.value = newWidth;
+                    widthSliderValue.textContent = `${newWidth} px`;
+                }
+            }
+            
+            if (originalImage) {
+                processImage(originalImage);
+            }
+            
+            isUpdating = false;
+        }
+
+        function handleImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    originalAspectRatio = img.width / img.height;
+                    
+                    // Set initial dimensions to original
+                    const initialWidth = Math.min(img.width, 1080);
+                    const initialHeight = Math.round(initialWidth / originalAspectRatio);
+                    
+                    isUpdating = true;
+                    widthInput.value = initialWidth;
+                    heightInput.value = initialHeight;
+                    widthSlider.value = initialWidth;
+                    heightSlider.value = initialHeight;
+                    widthSliderValue.textContent = `${initialWidth} px`;
+                    heightSliderValue.textContent = `${initialHeight} px`;
+                    isUpdating = false;
+                    
+                    displayOriginalImage(img);
+                    processImage(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayOriginalImage(img) {
+            document.getElementById('originalPreview').classList.remove('hidden');
+            document.getElementById('originalImg').src = img.src;
+            
+            const info = `
+                <div class="info-row">
+                    <span class="info-label">Dimensions:</span>
+                    <span class="info-value">${img.width} × ${img.height} px</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Aspect Ratio:</span>
+                    <span class="info-value">${(img.width / img.height).toFixed(2)}:1</span>
+                </div>
+            `;
+            document.getElementById('originalInfo').innerHTML = info;
+        }
+
+        function processImage(img) {
+            const newWidth = parseInt(widthInput.value);
+            const newHeight = parseInt(heightInput.value);
+            
+            // Create downscaled canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+            
+            const downscaledSrc = canvas.toDataURL();
+            
+            // Display downscaled version
+            document.getElementById('downscaledPreview').classList.remove('hidden');
+            document.getElementById('downscaledImg').src = downscaledSrc;
+            
+            const downscaledInfo = `
+                <div class="info-row">
+                    <span class="info-label">Dimensions:</span>
+                    <span class="info-value">${newWidth} × ${newHeight} px</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Aspect Ratio:</span>
+                    <span class="info-value">${(newWidth / newHeight).toFixed(2)}:1</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Size Reduction:</span>
+                    <span class="info-value">${((1 - (newWidth * newHeight) / (img.width * img.height)) * 100).toFixed(1)}%</span>
+                </div>
+            `;
+            document.getElementById('downscaledInfo').innerHTML = downscaledInfo;
+            
+            // Update card grid
+            updateCardGrid(downscaledSrc);
+            
+            // Update cropping visualization
+            updateCroppingVisualization(downscaledSrc, newWidth, newHeight);
+        }
+
+        function updateCardGrid(imageSrc) {
+            const cards = document.querySelectorAll('.card-image-container');
+            cards.forEach(container => {
+                container.innerHTML = `<img src="${imageSrc}" alt="Card image" class="card-image">`;
+            });
+        }
+
+        function updateCroppingVisualization(imageSrc, width, height) {
+            const cropPreviewImg = document.getElementById('cropPreviewImg');
+            const cropFrame = document.getElementById('cropFrame');
+            const croppedRegions = document.getElementById('croppedRegions');
+            const placeholder = document.querySelector('.crop-visualization .placeholder-content');
+            
+            // Hide placeholder, show image
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+            cropPreviewImg.style.display = 'block';
+            cropPreviewImg.src = imageSrc;
+            
+            // Wait for image to load to get its display dimensions
+            cropPreviewImg.onload = () => {
+                const imgDisplayWidth = cropPreviewImg.offsetWidth;
+                const imgDisplayHeight = cropPreviewImg.offsetHeight;
+                
+                const imgAspect = width / height;
+                const targetAspect = 3 / 4;
+                
+                let frameWidth, frameHeight, frameTop, frameLeft;
+                
+                if (imgAspect > targetAspect) {
+                    // Image is wider than 3:4 - crop sides
+                    frameHeight = imgDisplayHeight;
+                    frameWidth = frameHeight * targetAspect;
+                    frameTop = 0;
+                    frameLeft = (imgDisplayWidth - frameWidth) / 2;
+                    
+                    // Add cropped regions on left and right
+                    croppedRegions.innerHTML = `
+                        <div class="cropped-region" style="
+                            top: 0;
+                            left: 0;
+                            width: ${frameLeft}px;
+                            height: ${imgDisplayHeight}px;
+                        "></div>
+                        <div class="cropped-region" style="
+                            top: 0;
+                            right: 0;
+                            width: ${frameLeft}px;
+                            height: ${imgDisplayHeight}px;
+                        "></div>
+                    `;
+                } else {
+                    // Image is taller than 3:4 - crop top/bottom
+                    frameWidth = imgDisplayWidth;
+                    frameHeight = frameWidth / targetAspect;
+                    frameLeft = 0;
+                    frameTop = (imgDisplayHeight - frameHeight) / 2;
+                    
+                    // Add cropped regions on top and bottom
+                    croppedRegions.innerHTML = `
+                        <div class="cropped-region" style="
+                            top: 0;
+                            left: 0;
+                            width: ${imgDisplayWidth}px;
+                            height: ${frameTop}px;
+                        "></div>
+                        <div class="cropped-region" style="
+                            bottom: 0;
+                            left: 0;
+                            width: ${imgDisplayWidth}px;
+                            height: ${frameTop}px;
+                        "></div>
+                    `;
+                }
+                
+                // Position the crop frame
+                cropFrame.style.width = `${frameWidth}px`;
+                cropFrame.style.height = `${frameHeight}px`;
+                cropFrame.style.top = `${frameTop}px`;
+                cropFrame.style.left = `${frameLeft}px`;
+                
+                // Update crop statistics
+                updateCropStats(width, height, imgAspect, targetAspect);
+            };
+        }
+
+        function updateCropStats(width, height, imgAspect, targetAspect) {
+            document.getElementById('cropStats').style.display = 'block';
+            document.getElementById('originalAspect').textContent = `${imgAspect.toFixed(2)}:1`;
+            
+            let croppedPercent, direction;
+            
+            if (imgAspect > targetAspect) {
+                // Cropping horizontally
+                const visibleWidth = height * targetAspect;
+                croppedPercent = ((1 - visibleWidth / width) * 100).toFixed(1);
+                direction = 'Horizontal (sides)';
+            } else {
+                // Cropping vertically
+                const visibleHeight = width / targetAspect;
+                croppedPercent = ((1 - visibleHeight / height) * 100).toFixed(1);
+                direction = 'Vertical (top/bottom)';
+            }
+            
+            document.getElementById('croppedPercent').textContent = `${croppedPercent}%`;
+            document.getElementById('cropDirection').textContent = direction;
+        }
+
+        function loadSampleImage(type) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (type === 'landscape') {
+                canvas.width = 1920;
+                canvas.height = 1080;
+                
+                // Create gradient background
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 80px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('LANDSCAPE IMAGE', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.font = '40px Arial';
+                ctx.fillText('1920 × 1080 px', canvas.width / 2, canvas.height / 2 + 40);
+            } else if (type === 'portrait') {
+                canvas.width = 1080;
+                canvas.height = 1920;
+                
+                // Create gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#f093fb');
+                gradient.addColorStop(1, '#f5576c');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 70px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('PORTRAIT', canvas.width / 2, canvas.height / 2 - 60);
+                ctx.fillText('IMAGE', canvas.width / 2, canvas.height / 2 + 20);
+                ctx.font = '40px Arial';
+                ctx.fillText('1080 × 1920 px', canvas.width / 2, canvas.height / 2 + 80);
+            } else if (type === 'grid') {
+                canvas.width = 1600;
+                canvas.height = 1200;
+                
+                // Create white background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw grid
+                const gridSize = 80;
+                const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+                
+                for (let y = 0; y < canvas.height; y += gridSize) {
+                    for (let x = 0; x < canvas.width; x += gridSize) {
+                        const colorIndex = ((x / gridSize) + (y / gridSize)) % colors.length;
+                        ctx.fillStyle = colors[colorIndex];
+                        ctx.fillRect(x, y, gridSize - 2, gridSize - 2);
+                    }
+                }
+                
+                // Add overlay text
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, canvas.height / 2 - 80, canvas.width, 160);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 70px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GRID PATTERN', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.font = '40px Arial';
+                ctx.fillText('1600 × 1200 px', canvas.width / 2, canvas.height / 2 + 50);
+            }
+            
+            const img = new Image();
+            img.onload = () => {
+                originalImage = img;
+                originalAspectRatio = img.width / img.height;
+                
+                // Set initial dimensions
+                const initialWidth = Math.min(img.width, 1080);
+                const initialHeight = Math.round(initialWidth / originalAspectRatio);
+                
+                isUpdating = true;
+                widthInput.value = initialWidth;
+                heightInput.value = initialHeight;
+                widthSlider.value = initialWidth;
+                heightSlider.value = initialHeight;
+                widthSliderValue.textContent = `${initialWidth} px`;
+                heightSliderValue.textContent = `${initialHeight} px`;
+                isUpdating = false;
+                
+                displayOriginalImage(img);
+                processImage(img);
+            };
+            img.src = canvas.toDataURL();
+        }
+    </script>
+</body>
+</html>
