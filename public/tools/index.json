@@ -1,11 +1,12 @@
 {
-  "version": 16,
-  "lastUpdated": "2026-02-04T05:39:41Z",
+  "version": 17,
+  "lastUpdated": "2026-02-12T08:14:24Z",
   "tools": [
     "analytics-logs-to-json.html",
     "analytics-sanitiser.html",
     "base64-previewer.html",
     "curl-comparator.html",
+    "image-scaling-cropping-demo.html",
     "index.html",
     "json-comparator.html"
   ]
