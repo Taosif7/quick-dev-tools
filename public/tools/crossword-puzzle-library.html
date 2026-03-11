@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>XWORD · .puz Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy:    #0b1629;
+    --navy2:   #0e1e38;
+    --navy3:   #162440;
+    --cream:   #e8dfc8;
+    --cream2:  #f5efe0;
+    --gold:    #c9a84c;
+    --gold2:   #e0c06a;
+    --blue:    #3a7bd5;
+    --blue2:   #5b9bef;
+    --red:     #c0392b;
+    --green:   #1a9e6e;
+    --line:    rgba(200,175,100,0.18);
+    --line2:   rgba(200,175,100,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Blueprint grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(var(--line2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line2) 1px, transparent 1px),
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(11,22,41,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: 0 28px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 900; letter-spacing: 2px;
+    color: var(--gold);
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .logo span { color: var(--cream); opacity: 0.35; font-size: 14px; font-family: 'IBM Plex Mono', monospace; font-weight: 300; }
+  .header-btns { display: flex; gap: 10px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 7px 16px; border-radius: 3px; border: none; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--gold); color: var(--navy);
+  }
+  .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent; color: var(--cream); opacity: 0.5;
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { opacity: 1; border-color: var(--gold); color: var(--gold); }
+  .btn-danger {
+    background: transparent; color: #e57373; border: 1px solid rgba(192,57,43,0.4);
+  }
+  .btn-danger:hover { background: rgba(192,57,43,0.15); }
+
+  /* ── HOME ── */
+  #screen-home { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 56px 24px; }
+  .home-title {
+    text-align: center; margin-bottom: 52px;
+  }
+  .home-title h1 {
+    font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 900;
+    color: var(--cream2); line-height: 1; letter-spacing: -1px;
+  }
+  .home-title h1 em {
+    font-style: italic; color: var(--gold);
+  }
+  .home-title p {
+    margin-top: 12px; font-size: 11px; letter-spacing: 3px;
+    color: var(--cream); opacity: 0.35; text-transform: uppercase;
+  }
+
+  /* Import panel */
+  .import-panel {
+    background: var(--navy2);
+    border: 1px solid var(--line);
+    border-radius: 6px; padding: 28px; margin-bottom: 32px;
+    animation: fadeSlide 0.25s ease;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .import-panel h3 {
+    font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold);
+    margin-bottom: 20px; letter-spacing: 0.5px;
+  }
+  .import-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .import-tab {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 8px 18px; cursor: pointer;
+    border: none; background: transparent; color: var(--cream); opacity: 0.4;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .import-tab.active { opacity: 1; color: var(--gold); border-bottom-color: var(--gold); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+  .drop-zone {
+    border: 1.5px dashed var(--line); border-radius: 4px;
+    padding: 36px; text-align: center; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--gold); background: rgba(201,168,76,0.06);
+  }
+  .drop-zone .icon { font-size: 32px; margin-bottom: 10px; opacity: 0.5; }
+  .drop-zone p { font-size: 12px; opacity: 0.5; }
+  .drop-zone strong { color: var(--gold); opacity: 1; font-weight: 600; }
+  textarea.paste-area {
+    width: 100%; background: var(--navy); border: 1px solid var(--line);
+    color: var(--cream); border-radius: 4px; padding: 12px 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    resize: vertical; min-height: 90px; outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea.paste-area:focus { border-color: var(--gold); }
+  .error-msg { color: #e57373; font-size: 11px; margin-top: 8px; }
+  .paste-actions { margin-top: 12px; display: flex; gap: 10px; align-items: center; }
+  label.hint { font-size: 10px; letter-spacing: 1px; opacity: 0.4; text-transform: uppercase; display: block; margin-bottom: 8px; }
+
+  /* Library */
+  .library-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .library-header h2 {
+    font-family: 'Playfair Display', serif; font-size: 22px; color: var(--cream2);
+  }
+  .puzzle-card {
+    background: var(--navy2); border: 1px solid var(--line);
+    border-radius: 5px; padding: 18px 22px; margin-bottom: 10px;
+    cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .puzzle-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--gold); transform: scaleY(0);
+    transition: transform 0.15s; transform-origin: bottom;
+  }
+  .puzzle-card:hover::before { transform: scaleY(1); }
+  .puzzle-card:hover { border-color: rgba(201,168,76,0.45); background: var(--navy3); }
+  .puzzle-card .title { font-size: 15px; font-weight: 600; color: var(--cream2); }
+  .puzzle-card .meta { font-size: 11px; opacity: 0.4; margin-top: 4px; }
+  .puzzle-card .progress-pill {
+    font-size: 10px; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.3);
+  }
+  .empty-lib {
+    text-align: center; padding: 64px 20px; opacity: 0.3;
+  }
+  .empty-lib .big { font-size: 52px; margin-bottom: 14px; }
+  .empty-lib p { font-size: 13px; }
+
+  /* ── GAME ── */
+  #screen-game {
+    display: none; position: relative; z-index: 1;
+    height: calc(100vh - 56px);
+    flex-direction: column;
+  }
+  #screen-game.active { display: flex; }
+
+  /* active clue bar */
+  .clue-bar {
+    background: var(--navy2); border-bottom: 1px solid var(--line);
+    padding: 10px 24px; font-size: 13px; min-height: 44px;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .clue-bar .clue-num {
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    letter-spacing: 1px; white-space: nowrap; text-transform: uppercase;
+  }
+  .clue-bar .clue-text { color: var(--cream2); opacity: 0.85; }
+  .clue-bar .clue-hint { color: var(--cream); opacity: 0.3; font-style: italic; }
+
+  /* main area */
+  .game-body {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* Clue panels */
+  .clue-panel {
+    width: 210px; flex-shrink: 0; overflow-y: auto;
+    border-right: 1px solid var(--line);
+    background: rgba(11,22,41,0.6);
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  }
+  .clue-panel.right { border-right: none; border-left: 1px solid var(--line); }
+  .clue-panel-head {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--navy2); border-bottom: 1px solid var(--line);
+    padding: 10px 14px;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); font-weight: 600;
+  }
+  .clue-item {
+    padding: 8px 14px; cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.12s; display: flex; gap: 8px; align-items: baseline;
+  }
+  .clue-item:hover { background: rgba(201,168,76,0.06); }
+  .clue-item.active {
+    background: rgba(201,168,76,0.1);
+    border-left-color: var(--gold);
+  }
+  .clue-item .cn {
+    font-size: 10px; font-weight: 600; color: var(--gold);
+    min-width: 22px; flex-shrink: 0;
+  }
+  .clue-item .ct { font-size: 11px; line-height: 1.5; color: var(--cream); opacity: 0.6; }
+  .clue-item.active .ct { opacity: 1; }
+
+  /* Grid area */
+  .grid-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    overflow: auto; padding: 24px;
+    flex-direction: column; gap: 20px;
+  }
+
+  .grid-wrapper {
+    position: relative;
+  }
+
+  table.xgrid {
+    border-collapse: collapse;
+    box-shadow: 0 0 0 2px var(--gold), 0 20px 80px rgba(0,0,0,0.5), 0 0 60px rgba(201,168,76,0.08);
+  }
+  table.xgrid td {
+    width: 52px; height: 52px;
+    border: 1px solid rgba(201,168,76,0.25);
+    background: var(--navy2);
+    position: relative; padding: 0;
+    cursor: pointer;
+    transition: background 0.1s;
+    user-select: none;
+  }
+  table.xgrid td.black {
+    background: #060d1a;
+    cursor: default;
+  }
+  table.xgrid td.hl { background: rgba(58,123,213,0.18); }
+  table.xgrid td.active { background: rgba(201,168,76,0.25); }
+  table.xgrid td.correct { background: rgba(26,158,110,0.2); }
+  table.xgrid td.wrong { background: rgba(192,57,43,0.2); }
+
+  td .cell-num {
+    position: absolute; top: 2px; left: 3px;
+    font-size: 8px; font-weight: 600; color: var(--gold); opacity: 0.7;
+    line-height: 1; pointer-events: none;
+  }
+  td .cell-letter {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    font-size: 22px; font-weight: 600; letter-spacing: 0;
+    color: var(--cream2); pointer-events: none;
+    transition: color 0.15s;
+  }
+  td.correct .cell-letter { color: var(--green); }
+  td.wrong .cell-letter { color: var(--red); }
+
+  /* Ink-blot correct animation */
+  @keyframes inkBlot {
+    0% { transform: scale(0); opacity: 1; }
+    60% { transform: scale(1.4); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .inkblot {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,158,110,0.5), transparent 70%);
+    animation: inkBlot 0.5s ease forwards;
+    pointer-events: none;
+  }
+
+  /* Solved banner */
+  .solved-banner {
+    background: linear-gradient(135deg, var(--navy2), var(--navy3));
+    border: 1px solid var(--gold);
+    border-radius: 6px; padding: 14px 32px;
+    text-align: center;
+    animation: fadeSlide 0.4s ease;
+  }
+  .solved-banner h3 {
+    font-family: 'Playfair Display', serif; font-size: 22px; color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .solved-banner p { font-size: 11px; opacity: 0.5; margin-top: 4px; }
+
+  /* Right controls */
+  .ctrl-panel {
+    width: 160px; flex-shrink: 0;
+    border-left: 1px solid var(--line);
+    background: rgba(11,22,41,0.6);
+    padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .ctrl-section h4 {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px; opacity: 0.7;
+  }
+  .ctrl-row {
+    display: flex; justify-content: space-between;
+    font-size: 11px; margin-bottom: 8px; align-items: center;
+  }
+  .ctrl-key {
+    background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 3px; padding: 2px 7px; font-size: 10px;
+    color: var(--gold); font-weight: 600;
+  }
+  .ctrl-desc { color: var(--cream); opacity: 0.4; font-size: 10px; }
+  .ctrl-btns { display: flex; flex-direction: column; gap: 8px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .clue-panel { width: 170px; }
+    .ctrl-panel { display: none; }
+    table.xgrid td { width: 42px; height: 42px; }
+    td .cell-letter { font-size: 18px; }
+  }
+  @media (max-width: 640px) {
+    .clue-panel { width: 140px; }
+    table.xgrid td { width: 36px; height: 36px; }
+    td .cell-letter { font-size: 15px; }
+    td .cell-num { font-size: 7px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">⊕ XWORD <span>.puz</span></div>
+  <div class="header-btns" id="header-btns">
+    <button class="btn btn-ghost" id="btn-lib" onclick="showHome()" style="display:none">← Library</button>
+    <button class="btn btn-ghost" id="btn-check" onclick="checkPuzzle()" style="display:none">Check</button>
+    <button class="btn btn-ghost" id="btn-reveal" onclick="revealPuzzle()" style="display:none">Reveal</button>
+    <button class="btn btn-primary" onclick="toggleImport()">+ Import</button>
+  </div>
+</header>
+
+<!-- HOME SCREEN -->
+<div id="screen-home">
+  <div class="home-title">
+    <h1>Puzzle <em>Library</em></h1>
+    <p>Machine Learning Crossword Terminal</p>
+  </div>
+
+  <!-- Import panel -->
+  <div class="import-panel" id="import-panel" style="display:none">
+    <h3>Import .puz File</h3>
+    <div class="import-tabs">
+      <button class="import-tab active" onclick="switchTab('file')">Upload File</button>
+      <button class="import-tab" onclick="switchTab('paste')">Paste Base64</button>
+    </div>
+    <div class="tab-pane active" id="tab-file">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <div class="icon">📄</div>
+        <p><strong>Click to browse</strong> or drag & drop a .puz file</p>
+      </div>
+      <input type="file" id="file-input" accept=".puz" style="display:none" onchange="handleFile(event)"/>
+    </div>
+    <div class="tab-pane" id="tab-paste">
+      <label class="hint">Paste base64-encoded .puz content</label>
+      <textarea class="paste-area" id="paste-area" placeholder="Paste base64 here..."></textarea>
+      <div class="error-msg" id="paste-error"></div>
+      <div class="paste-actions">
+        <button class="btn btn-primary" onclick="handlePaste()">Parse & Load</button>
+        <button class="btn btn-ghost" onclick="clearPaste()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Library -->
+  <div class="library-header">
+    <h2>Saved Puzzles</h2>
+  </div>
+  <div id="puzzle-list">
+    <div class="empty-lib">
+      <div class="big">⊞</div>
+      <p>No puzzles yet.<br/>Import a .puz file to begin.</p>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="screen-game">
+  <div class="clue-bar">
+    <span class="clue-num" id="active-clue-num">—</span>
+    <span class="clue-text" id="active-clue-text">
+      <span class="clue-hint">Click a cell to start solving</span>
+    </span>
+  </div>
+  <div class="game-body">
+    <!-- Across clues -->
+    <div class="clue-panel" id="panel-across">
+      <div class="clue-panel-head">Across</div>
+      <div id="list-across"></div>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid-area">
+      <div class="grid-wrapper">
+        <table class="xgrid" id="xgrid"></table>
+      </div>
+      <div class="solved-banner" id="solved-banner" style="display:none">
+        <h3>✦ Puzzle Complete</h3>
+        <p>All answers filled correctly.</p>
+      </div>
+    </div>
+
+    <!-- Down clues -->
+    <div class="clue-panel right" id="panel-down">
+      <div class="clue-panel-head">Down</div>
+      <div id="list-down"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="ctrl-panel">
+      <div class="ctrl-section">
+        <h4>Controls</h4>
+        <div class="ctrl-row"><span class="ctrl-key">Type</span><span class="ctrl-desc">Fill cell</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">⌫</span><span class="ctrl-desc">Delete</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">↑↓←→</span><span class="ctrl-desc">Navigate</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Tab</span><span class="ctrl-desc">Next word</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Click×2</span><span class="ctrl-desc">Toggle dir</span></div>
+      </div>
+      <div class="ctrl-section">
+        <h4>Actions</h4>
+        <div class="ctrl-btns">
+          <button class="btn btn-ghost" onclick="checkPuzzle()">Check</button>
+          <button class="btn btn-ghost" onclick="revealPuzzle()">Reveal</button>
+          <button class="btn btn-ghost" onclick="clearProgress()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── IN-MEMORY STORE ─────────────────────────────────────────────────────────
+const Store = {
+  _data: {},
+  save(key, val) { this._data[key] = val; },
+  get(key) { return this._data[key] || null; },
+  list() { return Object.entries(this._data).map(([k,v]) => ({ key: k, ...v })); },
+  delete(key) { delete this._data[key]; }
+};
+
+// ─── .PUZ PARSER ─────────────────────────────────────────────────────────────
+function parsePuz(buffer) {
+  const b = new Uint8Array(buffer);
+  const width  = b[0x18];
+  const height = b[0x19];
+  const numClues = b[0x1a] | (b[0x1b] << 8);
+  const cells = width * height;
+
+  const dec = (start, len) => Array.from(b.slice(start, start + len))
+    .map(x => String.fromCharCode(x)).join('');
+
+  const solution = dec(52, cells);
+
+  let ptr = 52 + cells * 2;
+  const readStr = () => {
+    let s = '';
+    while (ptr < b.length && b[ptr] !== 0) s += String.fromCharCode(b[ptr++]);
+    ptr++;
+    return s;
+  };
+
+  const title     = readStr();
+  const author    = readStr();
+  const copyright = readStr();
+  const clues = [];
+  for (let i = 0; i < numClues; i++) clues.push(readStr());
+  const notes = readStr();
+
+  // Build grid
+  const grid = [];
+  for (let r = 0; r < height; r++) {
+    grid[r] = [];
+    for (let c = 0; c < width; c++) {
+      const ch = solution[r * width + c];
+      grid[r][c] = { letter: ch, isBlack: ch === '#', number: null };
+    }
+  }
+
+  const isOpen = (r, c) => r >= 0 && r < height && c >= 0 && c < width && !grid[r][c].isBlack;
+
+  // Number cells
+  let num = 1;
+  const acrossStarts = [], downStarts = [];
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c < width; c++) {
+      if (grid[r][c].isBlack) continue;
+      const sa = !isOpen(r, c-1) && isOpen(r, c+1);
+      const sd = !isOpen(r-1, c) && isOpen(r+1, c);
+      if (sa || sd) {
+        grid[r][c].number = num++;
+        if (sa) acrossStarts.push({ num: grid[r][c].number, r, c });
+        if (sd) downStarts.push({ num: grid[r][c].number, r, c });
+      }
+    }
+  }
+
+  // Build entries
+  const buildEntry = (start, dir) => {
+    const cells2 = [];
+    if (dir === 'across') {
+      let c = start.c;
+      while (isOpen(start.r, c)) cells2.push([start.r, c++]);
+    } else {
+      let r = start.r;
+      while (isOpen(r, start.c)) cells2.push([r++, start.c]);
+    }
+    return { ...start, dir, cells: cells2 };
+  };
+
+  const allEntries = [
+    ...acrossStarts.map(s => buildEntry(s, 'across')),
+    ...downStarts.map(s => buildEntry(s, 'down'))
+  ].sort((a, b) => a.num - b.num || (a.dir === 'across' ? -1 : 1));
+
+  // Assign clue texts
+  clues.forEach((text, i) => {
+    if (allEntries[i]) allEntries[i].clue = text;
+  });
+  allEntries.forEach(e => { if (!e.clue) e.clue = '?'; });
+
+  return {
+    width, height, grid, solution,
+    entries: allEntries,
+    across: allEntries.filter(e => e.dir === 'across'),
+    down:   allEntries.filter(e => e.dir === 'down'),
+    title, author, copyright, notes
+  };
+}
+
+// ─── GAME STATE ───────────────────────────────────────────────────────────────
+let P = null;           // parsed puzzle
+let userGrid = null;    // 2d array of letters
+let activeCell = null;  // [r,c]
+let activeDir  = 'across';
+let activeEntry = null;
+let currentKey = null;
+let checkedCells = {};  // 'r-c' -> 'correct'|'wrong'|'empty'
+let solved = false;
+
+// ─── UI UTILS ────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function showHome() {
+  $('screen-home').style.display = '';
+  $('screen-game').classList.remove('active');
+  $('btn-lib').style.display = 'none';
+  $('btn-check').style.display = 'none';
+  $('btn-reveal').style.display = 'none';
+  refreshList();
+}
+
+function showGame() {
+  $('screen-home').style.display = 'none';
+  $('screen-game').classList.add('active');
+  $('btn-lib').style.display = '';
+  $('btn-check').style.display = '';
+  $('btn-reveal').style.display = '';
+}
+
+function toggleImport() {
+  const p = $('import-panel');
+  p.style.display = p.style.display === 'none' ? '' : 'none';
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.import-tab').forEach((el,i) => {
+    el.classList.toggle('active', (i === 0 && t==='file') || (i===1 && t==='paste'));
+  });
+  $('tab-file').classList.toggle('active', t === 'file');
+  $('tab-paste').classList.toggle('active', t === 'paste');
+}
+
+// ─── FILE HANDLING ───────────────────────────────────────────────────────────
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => importBuffer(ev.target.result, file.name.replace('.puz',''));
+  reader.readAsArrayBuffer(file);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  $('drop-zone').classList.add('dragover');
+}
+function handleDragLeave() { $('drop-zone').classList.remove('dragover'); }
+function handleDrop(e) {
+  e.preventDefault();
+  $('drop-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => importBuffer(ev.target.result, file.name.replace('.puz',''));
+  reader.readAsArrayBuffer(file);
+}
+
+function handlePaste() {
+  $('paste-error').textContent = '';
+  const raw = $('paste-area').value.trim();
+  try {
+    const bin = atob(raw);
+    const buf = new Uint8Array(bin.length);
+    for (let i=0; i<bin.length; i++) buf[i] = bin.charCodeAt(i);
+    importBuffer(buf.buffer, 'pasted-puzzle');
+  } catch(ex) {
+    $('paste-error').textContent = 'Invalid base64 .puz data: ' + ex.message;
+  }
+}
+
+function clearPaste() {
+  $('paste-area').value = '';
+  $('paste-error').textContent = '';
+}
+
+function importBuffer(buffer, hint) {
+  try {
+    const parsed = parsePuz(buffer);
+    const key = (parsed.title || hint || 'puzzle') + '-' + Date.now();
+    // Store raw bytes as Uint8Array
+    Store.save(key, {
+      title: parsed.title || hint || 'Untitled',
+      author: parsed.author || '',
+      buf: new Uint8Array(buffer),
+      progress: null
+    });
+    $('import-panel').style.display = 'none';
+    loadPuzzle(key);
+  } catch(ex) {
+    $('paste-error').textContent = 'Parse error: ' + ex.message;
+    $('import-panel').style.display = '';
+    switchTab('paste');
+  }
+}
+
+// ─── LOAD / REFRESH ──────────────────────────────────────────────────────────
+function loadPuzzle(key) {
+  const entry = Store.get(key);
+  if (!entry) return;
+  P = parsePuz(entry.buf.buffer);
+  currentKey = key;
+  solved = false;
+  checkedCells = {};
+
+  if (entry.progress && entry.progress.length === P.height) {
+    userGrid = entry.progress.map(r => [...r]);
+  } else {
+    userGrid = Array.from({length: P.height}, (_, r) =>
+      Array.from({length: P.width}, (_, c) => P.grid[r][c].isBlack ? '#' : '')
+    );
+  }
+
+  buildGrid();
+  buildClueLists();
+  activeCell = null;
+  activeDir  = 'across';
+  activeEntry = null;
+  updateClueBar();
+  $('solved-banner').style.display = 'none';
+  showGame();
+}
+
+function saveProgress() {
+  if (!currentKey) return;
+  const entry = Store.get(currentKey);
+  if (entry) {
+    entry.progress = userGrid.map(r => [...r]);
+    Store.save(currentKey, entry);
+  }
+}
+
+function refreshList() {
+  const list = Store.list();
+  const el = $('puzzle-list');
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty-lib"><div class="big">⊞</div><p>No puzzles yet.<br/>Import a .puz file to begin.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    const prog = p.progress ? calcProgress(p) : 0;
+    const pill = prog > 0 ? `<span class="progress-pill">${prog}% done</span>` : '';
+    return `<div class="puzzle-card" onclick="loadPuzzle('${p.key}')">
+      <div>
+        <div class="title">${esc(p.title)}</div>
+        ${p.author ? `<div class="meta">by ${esc(p.author)}</div>` : ''}
+      </div>
+      ${pill}
+    </div>`;
+  }).join('');
+}
+
+function calcProgress(entry) {
+  if (!entry.progress) return 0;
+  let filled = 0, total = 0;
+  entry.progress.forEach(row => row.forEach(ch => {
+    if (ch !== '#') { total++; if (ch !== '') filled++; }
+  }));
+  return total ? Math.round(filled / total * 100) : 0;
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── GRID BUILDER ────────────────────────────────────────────────────────────
+function buildGrid() {
+  const tbl = $('xgrid');
+  tbl.innerHTML = '';
+  for (let r = 0; r < P.height; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < P.width; c++) {
+      const td = document.createElement('td');
+      td.id = `c${r}_${c}`;
+      const cell = P.grid[r][c];
+      if (cell.isBlack) {
+        td.className = 'black';
+      } else {
+        if (cell.number) {
+          const span = document.createElement('span');
+          span.className = 'cell-num';
+          span.textContent = cell.number;
+          td.appendChild(span);
+        }
+        const ltr = document.createElement('div');
+        ltr.className = 'cell-letter';
+        ltr.id = `l${r}_${c}`;
+        ltr.textContent = userGrid[r][c] || '';
+        td.appendChild(ltr);
+        td.addEventListener('click', () => onCellClick(r, c));
+      }
+      tr.appendChild(td);
+    }
+    tbl.appendChild(tr);
+  }
+}
+
+function buildClueLists() {
+  const renderList = (entries, containerId) => {
+    const el = $(containerId);
+    el.innerHTML = '';
+    entries.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'clue-item';
+      div.id = `clue-${e.dir}-${e.num}`;
+      div.innerHTML = `<span class="cn">${e.num}</span><span class="ct">${esc(e.clue)}</span>`;
+      div.addEventListener('click', () => selectEntry(e));
+      el.appendChild(div);
+    });
+  };
+  renderList(P.across, 'list-across');
+  renderList(P.down,   'list-down');
+}
+
+// ─── INTERACTION ─────────────────────────────────────────────────────────────
+function onCellClick(r, c) {
+  if (P.grid[r][c].isBlack) return;
+  if (activeCell && activeCell[0] === r && activeCell[1] === c) {
+    // toggle direction
+    const newDir = activeDir === 'across' ? 'down' : 'across';
+    const e = findEntry(r, c, newDir) || findEntry(r, c, activeDir);
+    if (e) { activeDir = e.dir; selectEntry(e); return; }
+  }
+  activeCell = [r, c];
+  const e = findEntry(r, c, activeDir) || findEntry(r, c, activeDir === 'across' ? 'down' : 'across');
+  if (e) { activeDir = e.dir; selectEntry(e); } else updateHighlight();
+}
+
+function findEntry(r, c, dir) {
+  return P.entries.find(e => e.dir === dir && e.cells.some(([er,ec]) => er===r && ec===c));
+}
+
+function selectEntry(e) {
+  activeEntry = e;
+  activeDir   = e.dir;
+  activeCell  = e.cells[0]; // keep or override below
+  // if current cell is in this entry, keep it
+  if (activeCell) {
+    const keep = e.cells.find(([r,c]) => r===activeCell[0] && c===activeCell[1]);
+    if (!keep) activeCell = e.cells[0];
+  }
+  updateHighlight();
+  updateClueBar();
+  scrollClueIntoView(e);
+}
+
+function updateHighlight() {
+  // clear all
+  for (let r = 0; r < P.height; r++) {
+    for (let c = 0; c < P.width; c++) {
+      const td = $(`c${r}_${c}`);
+      if (!td || P.grid[r][c].isBlack) continue;
+      const key = `${r}-${c}`;
+      let cls = '';
+      if (checkedCells[key] === 'correct') cls = 'correct';
+      else if (checkedCells[key] === 'wrong') cls = 'wrong';
+      td.className = cls;
+    }
+  }
+  // highlight entry
+  if (activeEntry) {
+    activeEntry.cells.forEach(([r,c]) => {
+      const td = $(`c${r}_${c}`);
+      const key = `${r}-${c}`;
+      if (!checkedCells[key]) td.className = 'hl';
+    });
+  }
+  // active cell
+  if (activeCell) {
+    const [r,c] = activeCell;
+    const td = $(`c${r}_${c}`);
+    const key = `${r}-${c}`;
+    if (!checkedCells[key]) td.className = 'active';
+    else td.classList.add('active');
+  }
+}
+
+function updateClueBar() {
+  if (activeEntry) {
+    $('active-clue-num').textContent = `${activeEntry.num} ${activeEntry.dir.toUpperCase()}`;
+    $('active-clue-text').textContent = activeEntry.clue || '?';
+  } else {
+    $('active-clue-num').textContent = '—';
+    $('active-clue-text').innerHTML = '<span class="clue-hint">Click a cell to start solving</span>';
+  }
+}
+
+function scrollClueIntoView(e) {
+  const el = $(`clue-${e.dir}-${e.num}`);
+  if (!el) return;
+  el.scrollIntoView({ block: 'nearest' });
+  // highlight
+  document.querySelectorAll('.clue-item').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── KEYBOARD ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!activeCell || !P) return;
+  const [r, c] = activeCell;
+
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    if (!activeEntry) return;
+    const idx = P.entries.indexOf(activeEntry);
+    const next = P.entries[(idx + (e.shiftKey ? P.entries.length - 1 : 1)) % P.entries.length];
+    selectEntry(next);
+    return;
+  }
+
+  const moves = { ArrowRight:[0,1,'across'], ArrowLeft:[0,-1,'across'], ArrowDown:[1,0,'down'], ArrowUp:[-1,0,'down'] };
+  if (moves[e.key]) {
+    e.preventDefault();
+    const [dr,dc,dir] = moves[e.key];
+    const nr = r+dr, nc = c+dc;
+    if (nr >= 0 && nr < P.height && nc >= 0 && nc < P.width && !P.grid[nr][nc].isBlack) {
+      activeCell = [nr, nc];
+      if (activeDir !== dir) { activeDir = dir; }
+      const ne = findEntry(nr, nc, dir) || activeEntry;
+      if (ne) selectEntry({ ...ne });
+      else updateHighlight();
+    }
+    return;
+  }
+
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    e.preventDefault();
+    if (userGrid[r][c] !== '') {
+      setCell(r, c, '');
+    } else {
+      let nr = r, nc = c;
+      if (activeDir === 'across') nc--;
+      else nr--;
+      if (nr >= 0 && nr < P.height && nc >= 0 && nc < P.width && !P.grid[nr][nc].isBlack) {
+        setCell(nr, nc, '');
+        activeCell = [nr, nc];
+        updateHighlight();
+      }
+    }
+    return;
+  }
+
+  if (/^[a-zA-Z]$/.test(e.key)) {
+    e.preventDefault();
+    setCell(r, c, e.key.toUpperCase());
+    advance();
+    checkSolved();
+  }
+});
+
+function setCell(r, c, ch) {
+  userGrid[r][c] = ch;
+  const lEl = $(`l${r}_${c}`);
+  if (lEl) lEl.textContent = ch;
+  const key = `${r}-${c}`;
+  delete checkedCells[key];
+  // reapply highlight class
+  const td = $(`c${r}_${c}`);
+  if (td) {
+    const inEntry = activeEntry?.cells.some(([er,ec])=>er===r&&ec===c);
+    const isActive = activeCell && activeCell[0]===r && activeCell[1]===c;
+    td.className = isActive ? 'active' : inEntry ? 'hl' : '';
+  }
+  saveProgress();
+}
+
+function advance() {
+  if (!activeEntry || !activeCell) return;
+  const [r,c] = activeCell;
+  const idx = activeEntry.cells.findIndex(([er,ec])=>er===r&&ec===c);
+  if (idx < activeEntry.cells.length - 1) {
+    activeCell = activeEntry.cells[idx+1];
+    updateHighlight();
+  }
+}
+
+function checkSolved() {
+  if (solved) return;
+  for (let r = 0; r < P.height; r++) {
+    for (let c = 0; c < P.width; c++) {
+      const ch = P.solution[r * P.width + c];
+      if (ch === '#') continue;
+      if (userGrid[r][c] !== ch) return;
+    }
+  }
+  solved = true;
+  $('solved-banner').style.display = '';
+  $('solved-banner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ─── CHECK / REVEAL ──────────────────────────────────────────────────────────
+function checkPuzzle() {
+  if (!P) return;
+  checkedCells = {};
+  for (let r = 0; r < P.height; r++) {
+    for (let c = 0; c < P.width; c++) {
+      if (P.grid[r][c].isBlack) continue;
+      const expected = P.solution[r * P.width + c];
+      const actual   = userGrid[r][c];
+      const key = `${r}-${c}`;
+      if (actual === '') checkedCells[key] = 'empty';
+      else if (actual === expected) {
+        checkedCells[key] = 'correct';
+        // inkblot
+        const td = $(`c${r}_${c}`);
+        const blob = document.createElement('div');
+        blob.className = 'inkblot';
+        td.appendChild(blob);
+        setTimeout(() => blob.remove(), 600);
+      } else checkedCells[key] = 'wrong';
+    }
+  }
+  updateHighlight();
+}
+
+function revealPuzzle() {
+  if (!P) return;
+  for (let r = 0; r < P.height; r++) {
+    for (let c = 0; c < P.width; c++) {
+      if (P.grid[r][c].isBlack) continue;
+      const ch = P.solution[r * P.width + c];
+      userGrid[r][c] = ch;
+      const lEl = $(`l${r}_${c}`);
+      if (lEl) lEl.textContent = ch;
+    }
+  }
+  saveProgress();
+  checkedCells = {};
+  updateHighlight();
+  checkSolved();
+}
+
+function clearProgress() {
+  if (!P) return;
+  for (let r = 0; r < P.height; r++) {
+    for (let c = 0; c < P.width; c++) {
+      if (!P.grid[r][c].isBlack) {
+        userGrid[r][c] = '';
+        const lEl = $(`l${r}_${c}`);
+        if (lEl) lEl.textContent = '';
+      }
+    }
+  }
+  checkedCells = {};
+  solved = false;
+  $('solved-banner').style.display = 'none';
+  saveProgress();
+  updateHighlight();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+showHome();
+</script>
+</body>
+</html>
