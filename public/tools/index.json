@@ -1,10 +1,11 @@
 {
-  "version": 17,
-  "lastUpdated": "2026-02-12T08:14:24Z",
+  "version": 18,
+  "lastUpdated": "2026-03-11T10:12:05Z",
   "tools": [
     "analytics-logs-to-json.html",
     "analytics-sanitiser.html",
     "base64-previewer.html",
+    "crossword-puzzle-library.html",
     "curl-comparator.html",
     "image-scaling-cropping-demo.html",
     "index.html",
