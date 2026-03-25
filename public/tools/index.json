@@ -1,6 +1,6 @@
 {
-  "version": 18,
-  "lastUpdated": "2026-03-11T10:12:05Z",
+  "version": 19,
+  "lastUpdated": "2026-03-25T13:14:38Z",
   "tools": [
     "analytics-logs-to-json.html",
     "analytics-sanitiser.html",
