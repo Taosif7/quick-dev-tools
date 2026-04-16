@@ -24,51 +24,35 @@
   .mx { max-width: 980px; margin: 0 auto; }
   .dm { font-family: 'DM Sans', sans-serif; }
   .mono { font-family: 'JetBrains Mono', monospace; }
-
-  /* Header */
   .header-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
   .header-title { font-size: 24px; font-weight: 700; color: var(--text-primary); margin: 2px 0 0; letter-spacing: -0.5px; }
-
-  /* Tabs */
   .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
   .tab-btn { font-size: 13px; font-weight: 600; padding: 10px 20px 11px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-dimmer); cursor: pointer; display: flex; align-items: baseline; gap: 6px; transition: color .15s; }
   .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--blue); }
   .tab-btn .sub { font-size: 10px; font-weight: 400; color: var(--text-dimmest); }
   .tab-btn.active .sub { color: var(--blue-light); }
-
-  /* Editor */
   .editor-hint { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
   .editor-area { width: 100%; min-height: 65vh; font-family: 'JetBrains Mono',monospace; font-size: 12px; line-height: 1.65; padding: 16px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); outline: none; resize: vertical; white-space: pre-wrap; }
   .editor-area::placeholder { color: var(--text-dimmest); }
   .parse-bar { margin-top: 10px; padding: 8px 12px; background: var(--bg-card-hover); border: 1px solid #1a1a1e; border-radius: 6px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
   .parse-bar span { font-size: 11px; }
-
-  /* Buttons */
   .btn { font-family: 'DM Sans',sans-serif; font-weight: 600; cursor: pointer; border-radius: 5px; transition: all .15s; }
   .btn-outline { font-size: 10px; padding: 4px 12px; border: 1px solid #27272a; background: transparent; color: var(--text-dim); }
   .btn-blue { font-size: 10px; padding: 4px 14px; border: 1px solid var(--blue); background: var(--blue-bg); color: var(--blue-light); }
   .btn-blue-lg { font-size: 12px; padding: 8px 20px; border-radius: 6px; border: 1px solid var(--blue); background: var(--blue-bg); color: var(--blue-light); }
-
-  /* Stats */
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 6px; margin-bottom: 14px; }
   .stat-card { background: var(--bg-card-hover); border: 1px solid #1a1a1e; border-radius: 8px; padding: 10px 12px; }
   .stat-val { font-size: 18px; font-weight: 700; }
   .stat-label { font-size: 9px; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
-
-  /* Filters */
   .filters { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; }
   .filter-btn { font-family: 'DM Sans',sans-serif; font-size: 10px; font-weight: 500; padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dimmer); cursor: pointer; text-transform: capitalize; transition: all .15s; }
   .filter-btn.active { border-color: var(--blue); background: rgba(59,130,246,0.1); color: var(--blue-light); }
   .filter-btn.active-indigo { border-color: var(--indigo); background: var(--indigo-bg); color: var(--indigo-light); }
   .filter-sep { width: 1px; height: 14px; background: var(--border); margin: 0 2px; }
   .search-input { font-family: 'JetBrains Mono',monospace; font-size: 10px; padding: 4px 9px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-card-hover); color: var(--text-muted); outline: none; width: 150px; }
-
-  /* File group */
   .file-header { display: flex; align-items: center; gap: 8px; padding: 6px 0 4px; border-bottom: 1px solid var(--border-subtle); }
   .file-name { font-size: 11px; color: var(--blue); font-weight: 500; }
   .file-count { font-size: 9px; color: var(--text-dimmest); }
-
-  /* Comment card */
   .comment-card { margin-top: 5px; padding: 9px 12px; background: var(--bg-card); border-radius: 0 8px 8px 0; cursor: pointer; transition: background .15s; }
   .comment-card.expanded { background: var(--bg-card-hover); }
   .comment-top { display: flex; align-items: flex-start; gap: 7px; }
@@ -85,26 +69,18 @@
   .comment-body.truncated { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .chevron { font-size: 9px; color: var(--text-dimmest); flex-shrink: 0; margin-top: 3px; transition: transform .2s; }
   .chevron.open { transform: rotate(180deg); }
-
-  /* Expanded panel */
   .expanded-panel { margin-top: 10px; margin-left: 25px; padding-top: 10px; border-top: 1px solid #1a1a1e; }
   .field-label { font-size: 9px; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 3px; }
-  .field-input { width: 100%; font-family: 'DM Sans',sans-serif; font-size: 12px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-input); background: #0a0a0b; color: var(--text-secondary); outline: none; }
-  .field-textarea { width: 100%; font-family: 'DM Sans',sans-serif; font-size: 12px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-input); background: #0a0a0b; color: var(--text-secondary); outline: none; resize: vertical; line-height: 1.55; }
+  .field-input { width: 100%; font-family: 'DM Sans',sans-serif; font-size: 12px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-input); background: #0a0a0b; color: var(--text-secondary); outline: none; box-sizing: border-box; }
+  .field-textarea { width: 100%; font-family: 'DM Sans',sans-serif; font-size: 12px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-input); background: #0a0a0b; color: var(--text-secondary); outline: none; resize: vertical; line-height: 1.55; box-sizing: border-box; }
   .file-path-dim { margin-top: 6px; font-size: 9px; color: var(--border-input); word-break: break-all; }
-
-  /* Verdict picker */
   .vp { display: flex; gap: 4px; }
   .vp.compact { gap: 3px; }
   .vp-btn { font-family: 'DM Sans',sans-serif; font-weight: 600; border-radius: 5px; cursor: pointer; transition: all .15s; letter-spacing: .3px; text-transform: uppercase; line-height: 1.4; }
   .vp-btn.compact { font-size: 9px; padding: 2px 6px; }
   .vp-btn.normal { font-size: 10px; padding: 3px 10px; }
   .vp-btn.off { border: 1px solid var(--border-input); background: transparent; color: var(--text-dimmest); }
-
-  /* Footer */
   .dash-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dimmest); }
-
-  /* Empty state */
   .empty { text-align: center; padding: 80px 20px; }
   .empty-title { font-size: 16px; color: var(--text-dimmer); margin-bottom: 8px; }
   .empty-sub { font-size: 12px; color: var(--text-dimmest); margin-bottom: 16px; }
@@ -112,28 +88,17 @@
 </style>
 </head>
 <body>
-
 <div class="mx" id="app">
-  <!-- Header -->
   <div style="margin-bottom:20px">
     <span class="dm header-label">PR Review Tool</span>
     <h1 class="dm header-title">Comment Resolution Plan</h1>
   </div>
-
-  <!-- Tabs -->
   <div class="mx tabs" id="tabs"></div>
-
-  <!-- Editor Tab -->
   <div class="mx" id="editor-tab" style="display:none"></div>
-
-  <!-- Dashboard Tab -->
   <div class="mx" id="dashboard-tab" style="display:none"></div>
 </div>
-
 <script>
-// ═══════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════
+// ═══════════ STATE ═══════════
 let rawText = "";
 let comments = [];
 let activeTab = "editor";
@@ -141,16 +106,15 @@ let filter = "all";
 let authorFilter = "all";
 let expandedId = null;
 let searchQuery = "";
-let syncSource = null; // "editor" | "dashboard"
 
-// ═══════════════════════════════════════════
-// PARSER
-// ═══════════════════════════════════════════
+// Tracks whether a full dashboard rebuild is needed vs a silent state-only update
+let dashNeedsRebuild = true;
+
+// ═══════════ PARSER ═══════════
 function parseComments(raw) {
   if (!raw.trim()) return [];
   const blocks = raw.split(/\n---\n/).filter(b => b.trim());
-  const result = [];
-  let section = "diff";
+  const result = []; let section = "diff";
   for (const block of blocks) {
     const trimmed = block.trim();
     if (!trimmed) continue;
@@ -163,353 +127,292 @@ function parseComments(raw) {
     for (const line of lines) {
       const t = line.trim();
       const fm = t.match(/^`([^`]+?)(?::(\d[\d\-]*))?`$/);
-      if (fm && !c.file) { c.file = fm[1]; c.line = fm[2]||""; continue; }
+      if (fm && !c.file) { c.file=fm[1]; c.line=fm[2]||""; continue; }
       const kv = t.match(/^(by|comment_id|Size of change|Proposed fix|Verdict|Reply)\s*:\s*(.*)/i);
       if (kv) {
-        const k = kv[1].toLowerCase().replace(/\s+/g,"_"), v = kv[2].trim();
-        if (k==="by") { c.author=v; c.authorType=/\[bot\]|coderabbit/i.test(v)?"bot":"human"; }
-        else if (k==="comment_id") c.id=v;
-        else if (k==="size_of_change") c.sizeOfChange=v;
-        else if (k==="proposed_fix") c.proposedFix=v;
-        else if (k==="verdict") c.verdict=["REJECT","ACCEPT","IGNORE"].includes(v.toUpperCase())?v.toUpperCase():"";
-        else if (k==="reply") c.reply=v;
-        continue;
+        const k=kv[1].toLowerCase().replace(/\s+/g,"_"), v=kv[2].trim();
+        if (k==="by"){c.author=v;c.authorType=/\[bot\]|coderabbit/i.test(v)?"bot":"human";}
+        else if(k==="comment_id")c.id=v; else if(k==="size_of_change")c.sizeOfChange=v;
+        else if(k==="proposed_fix")c.proposedFix=v;
+        else if(k==="verdict")c.verdict=["REJECT","ACCEPT","IGNORE"].includes(v.toUpperCase())?v.toUpperCase():"";
+        else if(k==="reply")c.reply=v; continue;
       }
-      if (/^\(issue comment\)$/i.test(t)) { c.isIssueComment=true; continue; }
+      if (/^\(issue comment\)$/i.test(t)){c.isIssueComment=true;continue;}
       bodyLines.push(t);
     }
-    c.body = bodyLines.filter(l=>l).join("\n").trim();
-    if (!c.id) c.id = `gen-${result.length}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
-    if (!c.file && c.isIssueComment) c.file = "(issue-level comment)";
-    if (c.body || c.file) result.push(c);
+    c.body=bodyLines.filter(l=>l).join("\n").trim();
+    if(!c.id)c.id=`gen-${result.length}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+    if(!c.file&&c.isIssueComment)c.file="(issue-level comment)";
+    if(c.body||c.file)result.push(c);
   }
   return result;
 }
 
-// ═══════════════════════════════════════════
-// SERIALIZER
-// ═══════════════════════════════════════════
+// ═══════════ SERIALIZER ═══════════
 function serializeComments(cs) {
-  if (!cs.length) return "";
-  let t = "# PR Comment Resolution Plan\n\n---\n";
-  const inDiff = cs.filter(c=>!c.outsideDiff&&!c.isIssueComment);
-  const outside = cs.filter(c=>c.outsideDiff);
-  const issues = cs.filter(c=>c.isIssueComment);
-  const s1 = (c, cid=true) => {
-    let s = "";
-    if (c.file && c.file!=="(issue-level comment)") s += `\`${c.file}${c.line?":"+c.line:""}\`\n`;
-    if (c.isIssueComment) s += "(issue comment)\n";
-    if (c.body) s += c.body+"\n";
-    if (c.author) s += `by: ${c.author}\n`;
-    if (cid && c.id && !c.id.startsWith("gen-")) s += `comment_id: ${c.id}\n`;
-    s += `Size of change: ${c.sizeOfChange||""}\n`;
-    s += `Proposed fix: ${c.proposedFix||""}\n`;
-    s += `Verdict: ${c.verdict||""}\n`;
-    s += `Reply: ${c.reply||""}`;
+  if(!cs.length)return "";
+  let t="# PR Comment Resolution Plan\n\n---\n";
+  const inDiff=cs.filter(c=>!c.outsideDiff&&!c.isIssueComment);
+  const outside=cs.filter(c=>c.outsideDiff);
+  const issues=cs.filter(c=>c.isIssueComment);
+  const s1=(c,cid=true)=>{
+    let s="";
+    if(c.file&&c.file!=="(issue-level comment)")s+=`\`${c.file}${c.line?":"+c.line:""}\`\n`;
+    if(c.isIssueComment)s+="(issue comment)\n";
+    if(c.body)s+=c.body+"\n";
+    if(c.author)s+=`by: ${c.author}\n`;
+    if(cid&&c.id&&!c.id.startsWith("gen-"))s+=`comment_id: ${c.id}\n`;
+    s+=`Size of change: ${c.sizeOfChange||""}\n`;
+    s+=`Proposed fix: ${c.proposedFix||""}\n`;
+    s+=`Verdict: ${c.verdict||""}\n`;
+    s+=`Reply: ${c.reply||""}`;
     return s;
   };
-  inDiff.forEach(c => { t += "\n"+s1(c)+"\n\n---\n"; });
-  if (outside.length) { t += "\n## Outside-diff comments (from CodeRabbit review body)\n\n---\n"; outside.forEach(c => { t += "\n"+s1(c,false)+"\n\n---\n"; }); }
-  if (issues.length) { t += "\n## Issue comments (thread-level)\n\n---\n"; issues.forEach(c => { t += "\n"+s1(c)+"\n\n---\n"; }); }
+  inDiff.forEach(c=>{t+="\n"+s1(c)+"\n\n---\n";});
+  if(outside.length){t+="\n## Outside-diff comments (from CodeRabbit review body)\n\n---\n";outside.forEach(c=>{t+="\n"+s1(c,false)+"\n\n---\n";});}
+  if(issues.length){t+="\n## Issue comments (thread-level)\n\n---\n";issues.forEach(c=>{t+="\n"+s1(c)+"\n\n---\n";});}
   return t;
 }
 
-// ═══════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════
-function fileShort(f) { const p=f.split("/"); return p.length>3 ? "\u2026/"+p.slice(-2).join("/") : f; }
-function esc(s) { const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
-
-const VC = {
-  REJECT: { label:"Reject", color:"var(--red)", bg:"var(--red-bg)", bgSolid:"var(--red-solid)", icon:"\u2715" },
-  ACCEPT: { label:"Accept", color:"var(--green)", bg:"var(--green-bg)", bgSolid:"var(--green-solid)", icon:"\u2713" },
-  IGNORE: { label:"Ignore", color:"var(--gray)", bg:"var(--gray-bg)", bgSolid:"var(--gray-solid)", icon:"\u2014" },
-  "":     { label:"Pending", color:"var(--amber)", bg:"var(--amber-bg)", bgSolid:"var(--amber-solid)", icon:"\u25CB" },
+// ═══════════ HELPERS ═══════════
+function fileShort(f){const p=f.split("/");return p.length>3?"\u2026/"+p.slice(-2).join("/"):f;}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML;}
+const VC={
+  REJECT:{label:"Reject",color:"var(--red)",bg:"var(--red-bg)",bgSolid:"var(--red-solid)",icon:"\u2715"},
+  ACCEPT:{label:"Accept",color:"var(--green)",bg:"var(--green-bg)",bgSolid:"var(--green-solid)",icon:"\u2713"},
+  IGNORE:{label:"Ignore",color:"var(--gray)",bg:"var(--gray-bg)",bgSolid:"var(--gray-solid)",icon:"\u2014"},
+  "":{label:"Pending",color:"var(--amber)",bg:"var(--amber-bg)",bgSolid:"var(--amber-solid)",icon:"\u25CB"},
 };
-
-function getStats() {
-  return {
-    total: comments.length,
-    pending: comments.filter(c=>!c.verdict).length,
-    accepted: comments.filter(c=>c.verdict==="ACCEPT").length,
-    rejected: comments.filter(c=>c.verdict==="REJECT").length,
-    ignored: comments.filter(c=>c.verdict==="IGNORE").length,
-  };
-}
-
-function getFiltered() {
-  let l = comments;
-  if (filter==="pending") l=l.filter(c=>!c.verdict);
-  if (filter==="accepted") l=l.filter(c=>c.verdict==="ACCEPT");
-  if (filter==="rejected") l=l.filter(c=>c.verdict==="REJECT");
-  if (filter==="ignored") l=l.filter(c=>c.verdict==="IGNORE");
-  if (authorFilter==="human") l=l.filter(c=>c.authorType==="human");
-  if (authorFilter==="bot") l=l.filter(c=>c.authorType==="bot");
-  if (searchQuery.trim()) { const q=searchQuery.toLowerCase(); l=l.filter(c=>c.body.toLowerCase().includes(q)||c.file.toLowerCase().includes(q)||c.author.toLowerCase().includes(q)||(c.reply||"").toLowerCase().includes(q)); }
+function getStats(){return{total:comments.length,pending:comments.filter(c=>!c.verdict).length,accepted:comments.filter(c=>c.verdict==="ACCEPT").length,rejected:comments.filter(c=>c.verdict==="REJECT").length,ignored:comments.filter(c=>c.verdict==="IGNORE").length};}
+function getFiltered(){
+  let l=comments;
+  if(filter==="pending")l=l.filter(c=>!c.verdict);if(filter==="accepted")l=l.filter(c=>c.verdict==="ACCEPT");
+  if(filter==="rejected")l=l.filter(c=>c.verdict==="REJECT");if(filter==="ignored")l=l.filter(c=>c.verdict==="IGNORE");
+  if(authorFilter==="human")l=l.filter(c=>c.authorType==="human");if(authorFilter==="bot")l=l.filter(c=>c.authorType==="bot");
+  if(searchQuery.trim()){const q=searchQuery.toLowerCase();l=l.filter(c=>c.body.toLowerCase().includes(q)||c.file.toLowerCase().includes(q)||c.author.toLowerCase().includes(q)||(c.reply||"").toLowerCase().includes(q));}
   return l;
 }
+function groupByFile(list){const g={};list.forEach(c=>{if(!g[c.file])g[c.file]=[];g[c.file].push(c);});return Object.entries(g).sort((a,b)=>b[1].length-a[1].length);}
 
-function groupByFile(list) {
-  const g={};
-  list.forEach(c=>{ if(!g[c.file]) g[c.file]=[]; g[c.file].push(c); });
-  return Object.entries(g).sort((a,b)=>b[1].length-a[1].length);
+// ═══════════ SYNC — silent field update (no DOM rebuild) ═══════════
+function silentFieldUpdate(id, patch) {
+  comments = comments.map(c => c.id === id ? { ...c, ...patch } : c);
+  rawText = serializeComments(comments);
+  // Update editor textarea without rebuilding
+  const ta = document.getElementById("editor-textarea");
+  if (ta) ta.value = rawText;
+  // Update parse bar counts
+  updateParseBar();
+  // Update dashboard stats + footer without full rebuild
+  updateDashStats();
 }
 
-// ═══════════════════════════════════════════
-// SYNC
-// ═══════════════════════════════════════════
+// ═══════════ SYNC — structural change (full rebuild) ═══════════
+function structuralUpdate(id, patch) {
+  comments = comments.map(c => c.id === id ? { ...c, ...patch } : c);
+  rawText = serializeComments(comments);
+  const ta = document.getElementById("editor-textarea");
+  if (ta) ta.value = rawText;
+  dashNeedsRebuild = true;
+  render();
+}
+
 function editorChanged(text) {
-  syncSource = "editor";
   rawText = text;
   comments = parseComments(text);
-  render();
+  dashNeedsRebuild = true;
+  renderTabs();
+  renderEditorBar();
+  if (activeTab === "dashboard") renderDashboard();
 }
 
-function dashboardChanged(id, patch) {
-  syncSource = "dashboard";
-  comments = comments.map(c => c.id===id ? {...c,...patch} : c);
-  rawText = serializeComments(comments);
-  render();
-}
-
-// ═══════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════
+// ═══════════ RENDER ═══════════
 function render() {
   renderTabs();
   renderEditor();
-  renderDashboard();
+  if (dashNeedsRebuild) { renderDashboard(); dashNeedsRebuild = false; }
 }
 
 function renderTabs() {
-  const stats = getStats();
   const tabs = [
-    { key:"editor", label:"Editor", sub: rawText ? `${rawText.length} chars` : "paste here" },
-    { key:"dashboard", label:"Dashboard", sub: comments.length ? `${comments.length} comments` : "empty" },
+    { key:"editor", label:"Editor", sub: rawText?`${rawText.length} chars`:"paste here" },
+    { key:"dashboard", label:"Dashboard", sub: comments.length?`${comments.length} comments`:"empty" },
   ];
   document.getElementById("tabs").innerHTML = tabs.map(t =>
     `<button class="dm tab-btn ${activeTab===t.key?"active":""}" data-tab="${t.key}">${t.label} <span class="sub">${t.sub}</span></button>`
   ).join("");
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.onclick = () => { activeTab = btn.dataset.tab; render(); };
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.onclick=()=>{activeTab=btn.dataset.tab;dashNeedsRebuild=true;render();};
   });
-  document.getElementById("editor-tab").style.display = activeTab==="editor" ? "block" : "none";
-  document.getElementById("dashboard-tab").style.display = activeTab==="dashboard" ? "block" : "none";
+  document.getElementById("editor-tab").style.display=activeTab==="editor"?"block":"none";
+  document.getElementById("dashboard-tab").style.display=activeTab==="dashboard"?"block":"none";
 }
 
 function renderEditor() {
-  if (activeTab !== "editor") return;
-  const stats = getStats();
-  const el = document.getElementById("editor-tab");
-
-  // Only rebuild structure if needed (avoid cursor jump on textarea)
-  if (!el.querySelector(".editor-area")) {
-    el.innerHTML = `
+  if(activeTab!=="editor")return;
+  const el=document.getElementById("editor-tab");
+  if(!el.querySelector(".editor-area")){
+    el.innerHTML=`
       <div class="dm editor-hint">
         <span>Paste your resolution plan below. Edits sync to the Dashboard tab in real time.</span>
         <button class="dm btn btn-outline" id="clear-btn" style="display:none">Clear</button>
       </div>
       <textarea class="editor-area" id="editor-textarea" spellcheck="false"
-        placeholder="Paste your PR comment resolution plan here…
-
-Expected format:
----
-\`file/path.dart:42\`
-Comment body here
-by: author-name
-comment_id: 123456
-Size of change: 
-Proposed fix: 
-Verdict: REJECT
-Reply: Your reply here
-
----"></textarea>
-      <div class="dm parse-bar" id="parse-bar" style="display:none"></div>
-    `;
-    const ta = document.getElementById("editor-textarea");
-    ta.addEventListener("input", () => editorChanged(ta.value));
-    document.getElementById("clear-btn").addEventListener("click", () => { editorChanged(""); ta.value = ""; });
+        placeholder="Paste your PR comment resolution plan here\u2026\n\nExpected format:\n---\n\`file/path.dart:42\`\nComment body here\nby: author-name\ncomment_id: 123456\nSize of change: \nProposed fix: \nVerdict: REJECT\nReply: Your reply here\n\n---"></textarea>
+      <div class="dm parse-bar" id="parse-bar" style="display:none"></div>`;
+    document.getElementById("editor-textarea").addEventListener("input",function(){editorChanged(this.value);});
+    document.getElementById("clear-btn").addEventListener("click",()=>{editorChanged("");document.getElementById("editor-textarea").value="";});
   }
+  // Always sync textarea content
+  document.getElementById("editor-textarea").value = rawText;
+  document.getElementById("clear-btn").style.display=rawText?"inline-block":"none";
+  renderEditorBar();
+}
 
-  // Sync textarea value only if change came from dashboard
-  const ta = document.getElementById("editor-textarea");
-  if (syncSource === "dashboard") { ta.value = rawText; }
+function renderEditorBar() {
+  updateParseBar();
+}
 
-  document.getElementById("clear-btn").style.display = rawText ? "inline-block" : "none";
-
-  const bar = document.getElementById("parse-bar");
-  if (comments.length > 0) {
-    bar.style.display = "flex";
-    bar.innerHTML = `
+function updateParseBar() {
+  const bar=document.getElementById("parse-bar");
+  if(!bar)return;
+  const stats=getStats();
+  if(comments.length>0){
+    bar.style.display="flex";
+    bar.innerHTML=`
       <span class="dm" style="font-weight:600;color:var(--text-muted)">Parsed</span>
       <span class="dm" style="color:var(--blue-light)">${comments.length} comments</span>
       <span class="dm" style="color:var(--amber)">${stats.pending} pending</span>
       <span class="dm" style="color:var(--red)">${stats.rejected} rejected</span>
       <span class="dm" style="color:var(--green)">${stats.accepted} accepted</span>
       <div style="flex:1"></div>
-      <button class="dm btn btn-blue" id="goto-dash-btn">Open Dashboard \u2192</button>
-    `;
-    document.getElementById("goto-dash-btn").addEventListener("click", () => { activeTab="dashboard"; render(); });
-  } else {
-    bar.style.display = "none";
-  }
-  syncSource = null;
+      <button class="dm btn btn-blue" id="goto-dash-btn">Open Dashboard \u2192</button>`;
+    document.getElementById("goto-dash-btn").addEventListener("click",()=>{activeTab="dashboard";dashNeedsRebuild=true;render();});
+  } else { bar.style.display="none"; }
+}
+
+function updateDashStats() {
+  const stats = getStats();
+  const statEls = document.querySelectorAll("[data-stat]");
+  statEls.forEach(el => { const k = el.dataset.stat; if (stats[k] !== undefined) el.textContent = stats[k]; });
+  const footShowing = document.getElementById("foot-showing");
+  const footPending = document.getElementById("foot-pending");
+  if (footShowing) footShowing.textContent = `Showing ${getFiltered().length} of ${stats.total}`;
+  if (footPending) footPending.textContent = `${stats.pending} pending`;
 }
 
 function renderDashboard() {
-  if (activeTab !== "dashboard") return;
-  const el = document.getElementById("dashboard-tab");
-  const stats = getStats();
-
-  if (comments.length === 0) {
-    el.innerHTML = `<div class="dm empty"><div class="empty-title">No comments loaded</div><div class="empty-sub">Paste your resolution plan in the Editor tab first.</div><button class="dm btn btn-blue-lg" id="goto-editor">Go to Editor</button></div>`;
-    document.getElementById("goto-editor").addEventListener("click", () => { activeTab="editor"; render(); });
+  if(activeTab!=="dashboard")return;
+  const el=document.getElementById("dashboard-tab");
+  const stats=getStats();
+  if(comments.length===0){
+    el.innerHTML=`<div class="dm empty"><div class="empty-title">No comments loaded</div><div class="empty-sub">Paste your resolution plan in the Editor tab first.</div><button class="dm btn btn-blue-lg" id="goto-editor">Go to Editor</button></div>`;
+    document.getElementById("goto-editor").addEventListener("click",()=>{activeTab="editor";dashNeedsRebuild=true;render();});
     return;
   }
-
-  const filtered = getFiltered();
-  const groups = groupByFile(filtered);
-
-  let html = "";
+  const filtered=getFiltered();
+  const groups=groupByFile(filtered);
+  let html="";
 
   // Stats
-  html += `<div class="dm stats-grid">`;
-  [{l:"Total",v:stats.total,c:"var(--text-muted)"},{l:"Pending",v:stats.pending,c:"var(--amber)"},{l:"Accepted",v:stats.accepted,c:"var(--green)"},{l:"Rejected",v:stats.rejected,c:"var(--red)"},{l:"Ignored",v:stats.ignored,c:"var(--gray)"}].forEach(s => {
-    html += `<div class="stat-card"><div class="dm stat-val" style="color:${s.c}">${s.v}</div><div class="dm stat-label">${s.l}</div></div>`;
+  html+=`<div class="dm stats-grid">`;
+  [{l:"Total",v:stats.total,c:"var(--text-muted)",k:"total"},{l:"Pending",v:stats.pending,c:"var(--amber)",k:"pending"},{l:"Accepted",v:stats.accepted,c:"var(--green)",k:"accepted"},{l:"Rejected",v:stats.rejected,c:"var(--red)",k:"rejected"},{l:"Ignored",v:stats.ignored,c:"var(--gray)",k:"ignored"}].forEach(s=>{
+    html+=`<div class="stat-card"><div class="dm stat-val" style="color:${s.c}" data-stat="${s.k}">${s.v}</div><div class="dm stat-label">${s.l}</div></div>`;
   });
-  html += `</div>`;
+  html+=`</div>`;
 
   // Filters
-  html += `<div class="dm filters">`;
-  ["all","pending","accepted","rejected","ignored"].forEach(f => {
-    html += `<button class="filter-btn ${filter===f?"active":""}" data-filter="${f}">${f}</button>`;
-  });
-  html += `<div class="filter-sep"></div>`;
-  ["all","human","bot"].forEach(f => {
-    html += `<button class="filter-btn ${authorFilter===f?"active-indigo":""}" data-author="${f}">${f}</button>`;
-  });
-  html += `<div style="flex:1"></div>`;
-  html += `<input class="search-input" id="dash-search" placeholder="Search\u2026" value="${esc(searchQuery)}">`;
-  html += `</div>`;
+  html+=`<div class="dm filters">`;
+  ["all","pending","accepted","rejected","ignored"].forEach(f=>{html+=`<button class="filter-btn ${filter===f?"active":""}" data-filter="${f}">${f}</button>`;});
+  html+=`<div class="filter-sep"></div>`;
+  ["all","human","bot"].forEach(f=>{html+=`<button class="filter-btn ${authorFilter===f?"active-indigo":""}" data-author="${f}">${f}</button>`;});
+  html+=`<div style="flex:1"></div><input class="search-input" id="dash-search" placeholder="Search\u2026" value="${esc(searchQuery)}">`;
+  html+=`</div>`;
 
-  // Comments grouped by file
-  if (groups.length === 0 && comments.length > 0) {
-    html += `<div class="dm no-match">No comments match filters.</div>`;
-  }
+  if(groups.length===0&&comments.length>0){html+=`<div class="dm no-match">No comments match filters.</div>`;}
 
-  groups.forEach(([file, fcs]) => {
-    html += `<div style="margin-bottom:14px">`;
-    html += `<div class="file-header"><span class="dm file-name">${esc(fileShort(file))}</span><span class="dm file-count">${fcs.length}</span></div>`;
-    fcs.forEach(c => {
-      const vc = VC[c.verdict] || VC[""];
-      const exp = expandedId === c.id;
-      html += `<div class="comment-card ${exp?"expanded":""}" data-cid="${c.id}" style="border-left:2px solid ${vc.color}">`;
-      html += `<div class="comment-top">`;
-      html += `<span class="verdict-icon" style="background:${vc.bg};color:${vc.color}">${vc.icon}</span>`;
-      html += `<div style="flex:1;min-width:0">`;
-      html += `<div class="dm comment-meta">`;
-      html += `<span class="dm author ${c.authorType==="bot"?"author-bot":"author-human"}">${esc(c.author||"unknown")}</span>`;
-      if (c.line) html += `<span class="line-num">L${esc(c.line)}</span>`;
-      if (c.outsideDiff) html += `<span class="dm tag tag-outside">OUTSIDE DIFF</span>`;
-      if (c.isIssueComment) html += `<span class="dm tag tag-issue">ISSUE</span>`;
-      html += `</div>`;
-      html += `<p class="dm comment-body ${exp?"":"truncated"}">${esc(c.body)}</p>`;
-      html += `</div>`;
-
-      // Compact verdict buttons (collapsed only)
-      if (!exp) {
-        html += `<div class="vp compact" data-cid="${c.id}">`;
-        ["ACCEPT","REJECT","IGNORE"].forEach(v => {
-          const cfg = VC[v]; const on = c.verdict===v;
-          html += `<button class="vp-btn compact ${on?"":"off"}" data-v="${v}" data-cid="${c.id}" style="${on?`border:1.5px solid ${cfg.color};background:${cfg.bgSolid};color:${cfg.color}`:""}">${cfg.icon}</button>`;
-        });
-        html += `</div>`;
+  groups.forEach(([file,fcs])=>{
+    html+=`<div style="margin-bottom:14px">`;
+    html+=`<div class="file-header"><span class="dm file-name">${esc(fileShort(file))}</span><span class="dm file-count">${fcs.length}</span></div>`;
+    fcs.forEach(c=>{
+      const vc=VC[c.verdict]||VC[""];
+      const exp=expandedId===c.id;
+      html+=`<div class="comment-card ${exp?"expanded":""}" data-cid="${c.id}" style="border-left:2px solid ${vc.color}">`;
+      html+=`<div class="comment-top">`;
+      html+=`<span class="verdict-icon" style="background:${vc.bg};color:${vc.color}">${vc.icon}</span>`;
+      html+=`<div style="flex:1;min-width:0">`;
+      html+=`<div class="dm comment-meta">`;
+      html+=`<span class="dm author ${c.authorType==="bot"?"author-bot":"author-human"}">${esc(c.author||"unknown")}</span>`;
+      if(c.line)html+=`<span class="line-num">L${esc(c.line)}</span>`;
+      if(c.outsideDiff)html+=`<span class="dm tag tag-outside">OUTSIDE DIFF</span>`;
+      if(c.isIssueComment)html+=`<span class="dm tag tag-issue">ISSUE</span>`;
+      html+=`</div>`;
+      html+=`<p class="dm comment-body ${exp?"":"truncated"}">${esc(c.body)}</p>`;
+      html+=`</div>`;
+      if(!exp){
+        html+=`<div class="vp compact">`;
+        ["ACCEPT","REJECT","IGNORE"].forEach(v=>{const cfg=VC[v];const on=c.verdict===v;html+=`<button class="vp-btn compact ${on?"":"off"}" data-v="${v}" data-cid="${c.id}" style="${on?`border:1.5px solid ${cfg.color};background:${cfg.bgSolid};color:${cfg.color}`:""}">${cfg.icon}</button>`;});
+        html+=`</div>`;
       }
-      html += `<span class="chevron ${exp?"open":""}">&#9662;</span>`;
-      html += `</div>`; // comment-top
+      html+=`<span class="chevron ${exp?"open":""}">&#9662;</span>`;
+      html+=`</div>`;
 
-      // Expanded panel
-      if (exp) {
-        html += `<div class="expanded-panel">`;
-        // Verdict
-        html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">`;
-        html += `<span class="dm field-label" style="margin-bottom:0">Verdict</span>`;
-        html += `<div class="vp" data-cid="${c.id}">`;
-        ["ACCEPT","REJECT","IGNORE"].forEach(v => {
-          const cfg = VC[v]; const on = c.verdict===v;
-          html += `<button class="vp-btn normal ${on?"":"off"}" data-v="${v}" data-cid="${c.id}" style="${on?`border:1.5px solid ${cfg.color};background:${cfg.bgSolid};color:${cfg.color}`:""}">${cfg.label}</button>`;
-        });
-        html += `</div></div>`;
-        // Size of change
-        html += `<div style="margin-bottom:6px"><div class="dm field-label">Size of change</div><input class="dm field-input" data-field="sizeOfChange" data-cid="${c.id}" value="${esc(c.sizeOfChange||"")}" placeholder="e.g. S, M, L\u2026"></div>`;
-        // Proposed fix
-        html += `<div style="margin-bottom:6px"><div class="dm field-label">Proposed fix</div><input class="dm field-input" data-field="proposedFix" data-cid="${c.id}" value="${esc(c.proposedFix||"")}" placeholder="Describe the fix\u2026"></div>`;
-        // Reply
-        html += `<div><div class="dm field-label">Reply</div><textarea class="dm field-textarea" data-field="reply" data-cid="${c.id}" rows="3" placeholder="Draft your reply\u2026">${esc(c.reply||"")}</textarea></div>`;
-        html += `<div class="mono file-path-dim">${esc(c.file)}</div>`;
-        html += `</div>`; // expanded-panel
+      if(exp){
+        html+=`<div class="expanded-panel">`;
+        html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">`;
+        html+=`<span class="dm field-label" style="margin-bottom:0">Verdict</span><div class="vp">`;
+        ["ACCEPT","REJECT","IGNORE"].forEach(v=>{const cfg=VC[v];const on=c.verdict===v;html+=`<button class="vp-btn normal ${on?"":"off"}" data-v="${v}" data-cid="${c.id}" style="${on?`border:1.5px solid ${cfg.color};background:${cfg.bgSolid};color:${cfg.color}`:""}">${cfg.label}</button>`;});
+        html+=`</div></div>`;
+        html+=`<div style="margin-bottom:6px"><div class="dm field-label">Size of change</div><input class="dm field-input" data-field="sizeOfChange" data-cid="${c.id}" value="${esc(c.sizeOfChange||"")}" placeholder="e.g. S, M, L\u2026"></div>`;
+        html+=`<div style="margin-bottom:6px"><div class="dm field-label">Proposed fix</div><input class="dm field-input" data-field="proposedFix" data-cid="${c.id}" value="${esc(c.proposedFix||"")}" placeholder="Describe the fix\u2026"></div>`;
+        html+=`<div><div class="dm field-label">Reply</div><textarea class="dm field-textarea" data-field="reply" data-cid="${c.id}" rows="3" placeholder="Draft your reply\u2026">${esc(c.reply||"")}</textarea></div>`;
+        html+=`<div class="mono file-path-dim">${esc(c.file)}</div>`;
+        html+=`</div>`;
       }
-
-      html += `</div>`; // comment-card
+      html+=`</div>`;
     });
-    html += `</div>`;
+    html+=`</div>`;
   });
 
-  // Footer
-  html += `<div class="dm dash-footer"><span>Showing ${filtered.length} of ${stats.total}</span><span>${stats.pending} pending</span></div>`;
+  html+=`<div class="dm dash-footer"><span id="foot-showing">Showing ${filtered.length} of ${stats.total}</span><span id="foot-pending">${stats.pending} pending</span></div>`;
+  el.innerHTML=html;
 
-  el.innerHTML = html;
+  // ── Bind events ──
+  el.querySelectorAll(".filter-btn[data-filter]").forEach(btn=>{btn.onclick=()=>{filter=btn.dataset.filter;dashNeedsRebuild=true;renderDashboard();};});
+  el.querySelectorAll(".filter-btn[data-author]").forEach(btn=>{btn.onclick=()=>{authorFilter=btn.dataset.author;dashNeedsRebuild=true;renderDashboard();};});
+  const searchEl=document.getElementById("dash-search");
+  if(searchEl)searchEl.addEventListener("input",()=>{searchQuery=searchEl.value;dashNeedsRebuild=true;renderDashboard();searchEl.focus();});
 
-  // ── Event listeners ──
-
-  // Filter buttons
-  el.querySelectorAll(".filter-btn[data-filter]").forEach(btn => {
-    btn.onclick = () => { filter = btn.dataset.filter; renderDashboard(); };
-  });
-  el.querySelectorAll(".filter-btn[data-author]").forEach(btn => {
-    btn.onclick = () => { authorFilter = btn.dataset.author; renderDashboard(); };
-  });
-
-  // Search
-  const searchEl = document.getElementById("dash-search");
-  if (searchEl) {
-    searchEl.addEventListener("input", () => { searchQuery = searchEl.value; renderDashboard(); });
-    // Restore focus/cursor if search was active
-    if (document.activeElement === document.body && searchQuery) searchEl.focus();
-  }
-
-  // Card expand/collapse (click on card, not on inputs)
-  el.querySelectorAll(".comment-card").forEach(card => {
-    card.addEventListener("click", (e) => {
-      if (e.target.closest(".vp-btn, .field-input, .field-textarea, .vp")) return;
-      const cid = card.dataset.cid;
-      expandedId = expandedId === cid ? null : cid;
+  // Card expand/collapse
+  el.querySelectorAll(".comment-card").forEach(card=>{
+    card.addEventListener("click",(e)=>{
+      if(e.target.closest(".vp-btn,.field-input,.field-textarea"))return;
+      expandedId=expandedId===card.dataset.cid?null:card.dataset.cid;
+      dashNeedsRebuild=true;
       renderDashboard();
     });
   });
 
-  // Verdict buttons
-  el.querySelectorAll(".vp-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+  // Verdict buttons → structural (changes border color, icon, layout)
+  el.querySelectorAll(".vp-btn").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
       e.stopPropagation();
-      const cid = btn.dataset.cid, v = btn.dataset.v;
-      const c = comments.find(x=>x.id===cid);
-      if (c) dashboardChanged(cid, { verdict: c.verdict===v ? "" : v });
+      const cid=btn.dataset.cid,v=btn.dataset.v;
+      const c=comments.find(x=>x.id===cid);
+      if(c)structuralUpdate(cid,{verdict:c.verdict===v?"":v});
     });
   });
 
-  // Field inputs
-  el.querySelectorAll(".field-input, .field-textarea").forEach(inp => {
-    inp.addEventListener("input", (e) => {
+  // Field inputs → silent update (NO DOM rebuild, focus preserved)
+  el.querySelectorAll(".field-input,.field-textarea").forEach(inp=>{
+    inp.addEventListener("input",(e)=>{
       e.stopPropagation();
-      dashboardChanged(inp.dataset.cid, { [inp.dataset.field]: inp.value });
+      silentFieldUpdate(inp.dataset.cid,{[inp.dataset.field]:inp.value});
     });
-    // Prevent card toggle on click
-    inp.addEventListener("click", e => e.stopPropagation());
+    inp.addEventListener("click",e=>e.stopPropagation());
   });
 }
 
-// Initial render
 render();
 </script>
 </body>
