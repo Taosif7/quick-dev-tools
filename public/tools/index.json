@@ -1,6 +1,6 @@
 {
-  "version": 22,
-  "lastUpdated": "2026-04-16T11:10:26Z",
+  "version": 23,
+  "lastUpdated": "2026-05-15T06:52:55Z",
   "tools": [
     "analytics-logs-to-json.html",
     "analytics-sanitiser.html",
@@ -10,6 +10,7 @@
     "image-scaling-cropping-demo.html",
     "index.html",
     "json-comparator.html",
-    "pr-comments-resolver.html"
+    "pr-comments-resolver.html",
+    "work-leaves-presenter.html"
   ]
 }
