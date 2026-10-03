@@ -499,16 +499,30 @@ function showCpp(r){
     ?`// Usage (U8g2):\n// for (int i = 0; i < ${NM}_FRAME_COUNT; i++) {\n//   u8g2.clearBuffer();\n//   u8g2.drawXBMP(0, 0, ${NM}_WIDTH, ${NM}_HEIGHT, (const uint8_t*)pgm_read_ptr(&${nm}_frames[i]));\n//   u8g2.sendBuffer();\n//   delay(${NM}_FRAME_DELAY_MS);\n// }\n`
     :`// Usage (Adafruit_SSD1306):\n// for (int i = 0; i < ${NM}_FRAME_COUNT; i++) {\n//   display.clearDisplay();\n//   display.drawBitmap(0, 0, (const uint8_t*)pgm_read_ptr(&${nm}_frames[i]), ${NM}_WIDTH, ${NM}_HEIGHT, SSD1306_WHITE);\n//   display.display();\n//   delay(${NM}_FRAME_DELAY_MS);\n// }\n`;
   $('ct').value=t;
-  $('cs').textContent=`${n} frames × ${r.packed[0].length} bytes = ${sz(n*r.packed[0].length)} of flash · saves as ${nm}_frames.h.txt, rename it to .h`;
+  $('cs').textContent=`${n} frames × ${r.packed[0].length} bytes = ${sz(n*r.packed[0].length)} of flash · downloads as ${nm}_frames.h (some viewers save it as .h.txt, rename to .h)`;
 }
 let cppName='anim';
+async function getDls(){
+  if(dls)return dls;
+  try{dls=await window.claude.use('downloads')}catch{}
+  return dls;
+}
 $('cc').onclick=async()=>{
   const btn=$('cc'),txt=$('ct').value;let label=null;
   try{
-    if(dls){await dls.save({filename:cppName+'_frames.h.txt',data:txt});label='Saved!'}
-    else{await navigator.clipboard.writeText(txt);label='Download unavailable, copied instead'}
+    const d=await getDls();
+    if(d){await d.save({filename:cppName+'_frames.h.txt',data:txt});label='Saved!'}
+    else{
+      /* viewer download permission unavailable (e.g. page opened on its own): plain download */
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+      a.download=cppName+'_frames.h';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      try{await navigator.clipboard.writeText(txt);label='Downloading… (also copied)'}catch{label='Downloading…'}
+    }
   }catch(e){if(!(e&&e.code==='declined'))label='Could not save'}
-  if(label){btn.textContent=label;setTimeout(()=>btn.textContent='Download code',2200)}
+  if(label){btn.textContent=label;setTimeout(()=>btn.textContent='Download code',2400)}
 };
 
 /* GIF download through the viewer's download capability (plain links are inert here) */
