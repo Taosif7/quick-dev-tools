@@ -148,7 +148,7 @@ img#out{max-width:100%;border-radius:8px;display:block;margin:8px auto;image-ren
   </div>
 
   <div class="card hide" id="res">
-    <div class="tools" style="justify-content:space-between;align-items:center;margin:0 0 10px"><h2 class="h" style="margin:0">Your code</h2><button class="pri" id="cc">Copy code</button></div>
+    <div class="tools" style="justify-content:space-between;align-items:center;margin:0 0 10px"><h2 class="h" style="margin:0">Your code</h2><button class="pri" id="cc">Download code</button></div>
     <p class="note hide" id="cppn" style="margin:0 0 10px"></p>
     <div id="cppb"><textarea id="ct" readonly spellcheck="false"></textarea><p class="note" id="cs" style="margin:6px 0 0"></p></div>
     <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:12px">
@@ -487,7 +487,7 @@ function showCpp(r){
   }
   nb.classList.add('hide');bx.classList.remove('hide');
   const hex=b=>'0x'+b.toString(16).padStart(2,'0'),n=r.packed.length;
-  const nm=r.name,NM=nm.toUpperCase(),xbm=r.lib==='u8g2';
+  const nm=r.name,NM=nm.toUpperCase(),xbm=r.lib==='u8g2';cppName=nm;
   let t=`// ${r.ow}x${r.oh} px, ${n} frames, 1-bit, ${xbm?'XBM (LSB first)':'MSB first'}, 1 = lit pixel\n// For ${xbm?'U8g2 drawXBMP()':'Adafruit_GFX drawBitmap()'}\n#define ${NM}_WIDTH ${r.ow}\n#define ${NM}_HEIGHT ${r.oh}\n#define ${NM}_FRAME_COUNT ${n}\n#define ${NM}_FRAME_DELAY_MS ${r.delay*10}\n\n`;
   r.packed.forEach((f,i)=>{
     const rows=[];
@@ -499,14 +499,16 @@ function showCpp(r){
     ?`// Usage (U8g2):\n// for (int i = 0; i < ${NM}_FRAME_COUNT; i++) {\n//   u8g2.clearBuffer();\n//   u8g2.drawXBMP(0, 0, ${NM}_WIDTH, ${NM}_HEIGHT, (const uint8_t*)pgm_read_ptr(&${nm}_frames[i]));\n//   u8g2.sendBuffer();\n//   delay(${NM}_FRAME_DELAY_MS);\n// }\n`
     :`// Usage (Adafruit_SSD1306):\n// for (int i = 0; i < ${NM}_FRAME_COUNT; i++) {\n//   display.clearDisplay();\n//   display.drawBitmap(0, 0, (const uint8_t*)pgm_read_ptr(&${nm}_frames[i]), ${NM}_WIDTH, ${NM}_HEIGHT, SSD1306_WHITE);\n//   display.display();\n//   delay(${NM}_FRAME_DELAY_MS);\n// }\n`;
   $('ct').value=t;
-  $('cs').textContent=`${n} frames × ${r.packed[0].length} bytes = ${sz(n*r.packed[0].length)} of flash · ${t.split('\n').length} lines`;
+  $('cs').textContent=`${n} frames × ${r.packed[0].length} bytes = ${sz(n*r.packed[0].length)} of flash · saves as ${nm}_frames.h.txt, rename it to .h`;
 }
+let cppName='anim';
 $('cc').onclick=async()=>{
-  const ta=$('ct');let ok=true;
-  try{await navigator.clipboard.writeText(ta.value)}
-  catch{ta.focus();ta.select();try{ok=document.execCommand('copy')}catch{ok=false}}
-  $('cc').textContent=ok?'Copied!':'Press Ctrl/Cmd+C';
-  setTimeout(()=>$('cc').textContent='Copy code',1800);
+  const btn=$('cc'),txt=$('ct').value;let label=null;
+  try{
+    if(dls){await dls.save({filename:cppName+'_frames.h.txt',data:txt});label='Saved!'}
+    else{await navigator.clipboard.writeText(txt);label='Download unavailable, copied instead'}
+  }catch(e){if(!(e&&e.code==='declined'))label='Could not save'}
+  if(label){btn.textContent=label;setTimeout(()=>btn.textContent='Download code',2200)}
 };
 
 /* GIF download through the viewer's download capability (plain links are inert here) */
