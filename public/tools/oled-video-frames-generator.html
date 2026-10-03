@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OLED Code Generator</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--fg:#1d1d1b;--mut:#6b6a65;--bd:#dedcd5;--ac:#d9480f;--acfg:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#212120;--fg:#f0eee8;--mut:#9a988f;--bd:#3a3936;--ac:#ff7a3d;--acfg:#161615}}
+:root[data-theme="dark"]{--bg:#161615;--card:#212120;--fg:#f0eee8;--mut:#9a988f;--bd:#3a3936;--ac:#ff7a3d;--acfg:#161615}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 2px}
+.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+.drop{border:2px dashed var(--bd);border-radius:14px;padding:34px 16px;text-align:center;color:var(--mut);cursor:pointer}
+.drop.over{border-color:var(--ac);color:var(--ac)}
+.stage{position:relative;display:inline-block;max-width:100%;line-height:0;touch-action:none;background:#000;border-radius:8px;overflow:hidden}
+.stage video{position:absolute;left:50%;top:50%;max-width:none;max-height:none;display:block;transform-origin:center}
+.wrap{text-align:center}
+.box{position:absolute;z-index:2;border:2px solid var(--ac);box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move}
+.hd{position:absolute;right:-9px;bottom:-9px;width:20px;height:20px;background:var(--ac);border-radius:50%;cursor:nwse-resize}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.val{font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
+button,.btn{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:8px 14px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block}
+button.pri,.btn.pri{background:var(--ac);color:var(--acfg);border-color:var(--ac);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden;margin-top:10px}
+.bar>i{display:block;height:100%;width:0;background:var(--ac)}
+select{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:8px 10px;border-radius:10px;cursor:pointer}
+.chk{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--fg)}
+.seg{display:flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.seg label{flex:1;display:flex;margin:0;position:relative;cursor:pointer;color:var(--fg)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 6px;text-align:center;font-size:14px;line-height:1.3}
+.seg small{display:block;font-size:11px;color:var(--mut)}
+.seg input:checked+span{background:var(--ac);color:var(--acfg)}
+.seg input:checked+span small{color:inherit;opacity:.85}
+.seg input:focus-visible+span{outline:2px solid var(--ac);outline-offset:-3px}
+.hd.tl2{right:auto;bottom:auto;left:-9px;top:-9px}
+.tl{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;align-items:center;gap:8px;padding:14px 10px 6px;background:linear-gradient(transparent,rgba(0,0,0,.8));line-height:1;color:#fff;font-size:12px}
+.tl button{padding:0;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;font-size:11px;flex:none}
+.trk{position:relative;flex:1;height:28px;touch-action:none;cursor:pointer}
+.trk::before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:rgba(255,255,255,.3)}
+.rng{position:absolute;top:10px;height:8px;border-radius:2px;background:var(--ac)}
+.th{position:absolute;top:2px;width:14px;height:24px;margin-left:-7px;border-radius:4px;background:#fff;border:2px solid var(--ac);cursor:ew-resize}
+.ph{position:absolute;top:4px;width:2px;height:20px;margin-left:-1px;background:#fff;pointer-events:none}
+.tl span{min-width:40px;text-align:right;font-variant-numeric:tabular-nums}
+.oled{display:inline-block;max-width:100%;background:#12324a;border:1px solid #0b2236;border-radius:10px;padding:10px 16px 8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.pins{display:flex;justify-content:center;gap:14px;margin-bottom:8px}
+.pins i{font:9px/1 ui-monospace,Menlo,monospace;color:#c9d6e2;font-style:normal;letter-spacing:.5px}
+.scr{position:relative;display:inline-block;max-width:100%;line-height:0;background:#000;border:6px solid #050505;border-radius:4px;box-shadow:inset 0 0 0 1px #222}
+.scr canvas{display:block;image-rendering:pixelated;max-width:100%}
+.grid{position:absolute;inset:0;pointer-events:none;display:none;background-image:linear-gradient(to right,rgba(0,0,0,.5) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.5) 1px,transparent 1px)}
+.cap{font:10px/1 ui-monospace,Menlo,monospace;color:#9fb4c7;margin-top:8px;text-align:center}
+textarea{width:100%;height:200px;font:12px/1.4 ui-monospace,Menlo,monospace;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:8px;resize:vertical}
+.h{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin:0 0 12px;text-align:left;font-weight:600}
+input[type=text]{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:8px 10px;border-radius:10px}
+.rot{position:absolute;top:8px;right:8px;z-index:4;padding:6px 11px;border-radius:999px;border:0;background:rgba(0,0,0,.62);color:#fff;font-size:13px;line-height:1;cursor:pointer}
+.rot span{font-variant-numeric:tabular-nums}
+.hide{display:none}
+.note{font-size:13px;color:var(--mut)}
+img#out{max-width:100%;border-radius:8px;display:block;margin:8px auto;image-rendering:pixelated}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+</style>
+</head>
+<body>
+<main>
+<h1>OLED Code Generator</h1>
+<p class="sub">Turn a video clip into C++ bitmap frames for ESP32, Arduino and other microcontrollers. Everything runs in your browser; your video never leaves your device.</p>
+
+<div id="drop" class="drop">Drop a video here or tap to choose<input id="file" type="file" accept="video/*" hidden></div>
+
+<div id="ed" class="hide">
+  <div class="card wrap"><h2 class="h">1 · Crop and trim</h2>
+    <div class="stage" id="stage">
+      <video id="v" playsinline muted></video>
+      <div class="box" id="box"><div class="hd tl2" id="hd2"></div><div class="hd" id="hd"></div></div>
+      <button class="rot" id="rot" title="Rotate video 90°" aria-label="Rotate video 90 degrees">↻ <span id="ra">0°</span></button>
+      <div class="tl">
+        <button id="pp" aria-label="Play or pause">▶</button>
+        <div class="trk" id="trk"><div class="rng" id="rng"></div><div class="th" id="ts" title="Trim start"></div><div class="th" id="te" title="Trim end"></div><div class="ph" id="ph"></div></div>
+        <span id="tt" title="Trimmed length">0.0s</span>
+      </div>
+    </div>
+    <p class="note" style="margin:8px 0 0">Drag the orange box to move the crop and a corner dot to resize it. Drag the white handles on the video bar to trim, and use ↻ to rotate the video.</p>
+    <div class="tools"><button id="full">Reset crop</button><label class="chk">Display size <select id="ar" aria-label="Display size and crop aspect ratio">
+      <option value="free">Free size</option>
+      <optgroup label="OLED displays">
+        <option value="128x64" selected>128×64 (2:1)</option>
+        <option value="128x32">128×32 (4:1)</option>
+        <option value="128x128">128×128 (1:1)</option>
+        <option value="132x64">132×64</option>
+        <option value="128x96">128×96 (4:3)</option>
+        <option value="96x96">96×96 (1:1)</option>
+        <option value="96x64">96×64 (3:2)</option>
+        <option value="72x40">72×40 (9:5)</option>
+        <option value="64x48">64×48 (4:3)</option>
+        <option value="64x32">64×32 (2:1)</option>
+        <option value="256x64">256×64 (4:1)</option>
+      </optgroup>
+    </select></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="h">2 · Look</h2>
+    <label>Color mode</label>
+    <div class="seg">
+      <label><input type="radio" name="cm" value="color"><span>Color<small>full palette</small></span></label>
+      <label><input type="radio" name="cm" value="gray"><span>Grayscale<small>16 shades</small></span></label>
+      <label><input type="radio" name="cm" value="mono" checked><span>Black &amp; white<small>1-bit, for mono OLEDs</small></span></label>
+    </div>
+    <p class="note hide" id="mh" style="margin:8px 0 0">Code is only generated in Black &amp; white. Other modes just make the GIF preview.</p>
+    <div id="co" style="margin-top:10px"><label class="chk"><input type="checkbox" id="dith" checked> Dithering (smoother gradients)</label></div>
+    <div id="mo" class="hide" style="margin-top:12px">
+      <div class="row">
+        <div><label>Brightness</label><select id="thr" style="width:100%"><option value="90">Much brighter</option><option value="110">Brighter</option><option value="128" selected>Normal</option><option value="150">Darker</option><option value="170">Much darker</option></select></div>
+        <div><label>Shading style</label><select id="ds" style="width:100%"><option value="ord">Pattern (steady in motion)</option><option value="fs" selected>Smooth (detailed stills)</option><option value="none">Crisp (hard edges)</option></select>
+          <label class="chk" style="margin-top:8px"><input type="checkbox" id="inv"> Invert (white ↔ black)</label></div>
+      </div>
+    </div>
+    <div class="row" style="margin:14px 0 10px;align-items:end">
+      <p class="note" style="margin:0">Live preview on a mock OLED, follows the video playhead</p>
+      <div id="gcw" class="hide"><label>Display glow (preview only)</label><select id="gc" style="width:100%"><option value="255,255,255">White</option><option value="90,160,255">Blue</option><option value="255,190,60">Amber</option><option value="90,255,150">Green</option></select></div>
+    </div>
+    <div class="wrap"><div class="oled"><div class="pins"><i>GND</i><i>VCC</i><i>SCL</i><i>SDA</i></div><div class="scr"><canvas id="pc"></canvas><div class="grid" id="grid"></div></div><div class="cap" id="cap">OLED</div></div></div>
+  </div>
+
+
+  <div class="card">
+    <h2 class="h">3 · Code</h2>
+    <div class="row">
+      <div><label>Frame rate</label><select id="fps" style="width:100%"><option value="10">10 fps</option><option value="12">12 fps</option><option value="15">15 fps</option><option value="20">20 fps</option><option value="24" selected>24 fps</option><option value="30">30 fps</option></select></div>
+      <div><label>Library</label><select id="lib" style="width:100%"><option value="adafruit">Adafruit GFX (drawBitmap)</option><option value="u8g2">U8g2 (drawXBMP)</option></select></div>
+      <div><label>Variable name</label><input id="nm" type="text" value="anim" maxlength="24" style="width:100%" spellcheck="false" autocapitalize="off"></div>
+      <div id="ww" class="hide"><label>Output width (free size)</label><select id="w" style="width:100%"><option value="64">64 px</option><option value="96">96 px</option><option value="128" selected>128 px</option><option value="160">160 px</option><option value="192">192 px</option><option value="240">240 px</option><option value="320">320 px</option></select></div>
+    </div>
+    <p class="note" id="est" style="margin:12px 0 0"></p>
+    <div class="tools"><button class="pri" id="go" style="width:100%;padding:12px;font-size:16px">Generate code</button></div>
+    <div class="bar hide" id="bar"><i id="bi"></i></div>
+    <p class="note" id="st" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="card hide" id="res">
+    <div class="tools" style="justify-content:space-between;align-items:center;margin:0 0 10px"><h2 class="h" style="margin:0">Your code</h2><button class="pri" id="cc">Copy code</button></div>
+    <p class="note hide" id="cppn" style="margin:0 0 10px"></p>
+    <div id="cppb"><textarea id="ct" readonly spellcheck="false"></textarea><p class="note" id="cs" style="margin:6px 0 0"></p></div>
+    <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:12px">
+      <p class="note" style="margin:0 0 6px;text-align:center">Animation preview</p>
+      <img id="out" alt="Generated animation preview">
+      <div class="tools" style="justify-content:center"><a class="btn" id="dl" download="clip.gif">Download GIF</a></div>
+      <p class="note" id="info" style="text-align:center;margin:8px 0 0"></p>
+    </div>
+  </div>
+</div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const v=$('v'),box=$('box'),stage=$('stage');
+let crop={x:0,y:0,w:1,h:1},url=null,gifUrl=null,ratio=0,preset=null,busy=false,pvq=0,trim={s:0,e:1},gifBlob=null,gen=0,rot=0;
+const fmt=n=>n.toFixed(2)+'s';
+
+function load(f){
+  if(!f||!f.type.startsWith('video/'))return;
+  if(url)URL.revokeObjectURL(url);
+  url=URL.createObjectURL(f);v.src=url;
+}
+$('drop').onclick=()=>$('file').click();
+$('file').onchange=e=>load(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.add('over')}));
+['dragleave','drop'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.remove('over')}));
+$('drop').addEventListener('drop',e=>load(e.dataTransfer.files[0]));
+
+v.onloadedmetadata=()=>{
+  $('ed').classList.remove('hide');
+  trim={s:0,e:Math.min(v.duration,5)};
+  rot=0;$('ra').textContent='0°';layoutStage();
+  crop={x:0,y:0,w:1,h:1};
+  setAR();drawCrop();
+};
+
+function drawCrop(){
+  box.style.left=crop.x*100+'%';box.style.top=crop.y*100+'%';
+  box.style.width=crop.w*100+'%';box.style.height=crop.h*100+'%';
+  upd();
+}
+function dims(){
+  const sw=crop.w*VW(),sh=crop.h*VH();
+  if(preset)return{sw,sh,ow:preset[0],oh:preset[1]};
+  const ow=Math.min(+$('w').value,Math.round(sw));
+  return{sw,sh,ow,oh:Math.round(ow*sh/sw)};
+}
+function upd(){
+  invalidate();
+  const s=trim.s,e=trim.e;tlUI();
+  if(!v.videoWidth)return;
+  const{ow,oh}=dims();
+  const n=Math.max(0,Math.floor((e-s)*$('fps').value));
+  $('est').textContent=`Trim ${s.toFixed(1)}–${e.toFixed(1)}s · ${Math.min(n,300)} frames · ${ow}×${oh}px · `+(cfg().mode==='mono'?`~${sz(Math.min(n,300)*((ow+7)>>3)*oh)} of flash`:'code needs Black & white mode')+(n>300?' · capped at 300 frames':'');
+  preview();
+}
+['fps','w','lib','nm'].forEach(id=>$(id).oninput=upd);
+$('full').onclick=()=>{crop={x:0,y:0,w:1,h:1};setAR();drawCrop()};
+function setAR(){
+  const val=$('ar').value;
+  preset=val==='free'?null:val.split('x').map(Number);
+  ratio=preset?preset[0]/preset[1]:0;
+  $('ww').classList.toggle('hide',!!preset);
+  if(ratio&&v.videoWidth){
+    const W=VW(),H=VH();
+    const cx=crop.x+crop.w/2,cy=crop.y+crop.h/2;
+    const wpx=Math.min(W,H*ratio),hpx=wpx/ratio;
+    crop.w=wpx/W;crop.h=hpx/H;
+    crop.x=Math.min(1-crop.w,Math.max(0,cx-crop.w/2));
+    crop.y=Math.min(1-crop.h,Math.max(0,cy-crop.h/2));
+  }
+  drawCrop();
+}
+/* crop dragging */
+let drag=null;
+box.addEventListener('pointerdown',e=>{
+  e.preventDefault();box.setPointerCapture(e.pointerId);
+  drag={m:e.target.id==='hd'?'r':e.target.id==='hd2'?'t':'m',sx:e.clientX,sy:e.clientY,c:{...crop}};
+});
+box.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const r=stage.getBoundingClientRect();
+  const dx=(e.clientX-drag.sx)/r.width,dy=(e.clientY-drag.sy)/r.height,c=drag.c;
+  if(drag.m==='t'){
+    const W=VW(),H=VH(),rx=c.x+c.w,ry=c.y+c.h;
+    let w=Math.max(0.05,c.w-dx);
+    if(ratio){
+      w=Math.min(w,rx,ry*H*ratio/W);
+      crop.w=w;crop.h=w*W/ratio/H;
+    }else{
+      crop.w=Math.min(w,rx);
+      crop.h=Math.min(ry,Math.max(0.05,c.h-dy));
+    }
+    crop.x=rx-crop.w;crop.y=ry-crop.h;
+  }else if(drag.m==='m'){
+    crop.x=Math.min(1-c.w,Math.max(0,c.x+dx));
+    crop.y=Math.min(1-c.h,Math.max(0,c.y+dy));
+  }else if(ratio){
+    const W=VW(),H=VH();
+    let w=Math.max(0.05,c.w+dx);
+    w=Math.min(w,1-c.x,(1-c.y)*H*ratio/W);
+    crop.w=w;crop.h=w*W/ratio/H;
+  }else{
+    crop.w=Math.min(1-c.x,Math.max(0.05,c.w+dx));
+    crop.h=Math.min(1-c.y,Math.max(0.05,c.h+dy));
+  }
+  drawCrop();
+});
+['pointerup','pointercancel'].forEach(t=>box.addEventListener(t,()=>drag=null));
+$('ar').onchange=setAR;
+
+/* Color modes + GIF encoding */
+const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(n=>(n+.5)/16);
+const MINC={color:8,gray:4,mono:2},NB={color:7,gray:3,mono:0},FACT={color:.18,gray:.1,mono:.05};
+const sz=b=>b<1048576?Math.max(1,Math.round(b/1024))+' KB':(b/1048576).toFixed(1)+' MB';
+function cfg(){
+  return{mode:document.querySelector('input[name=cm]:checked').value,dith:$('dith').checked,
+    thr:+$('thr').value,inv:$('inv').checked,ds:$('ds').value};
+}
+function palette(mode){
+  if(mode==='mono')return[[0,0,0],[255,255,255]];
+  if(mode==='gray')return Array.from({length:16},(_,i)=>{const g=Math.round(i*255/15);return[g,g,g]});
+  const p=[];
+  for(let i=0;i<252;i++)p.push([Math.round(Math.floor(i/42)*255/5),Math.round(Math.floor(i%42/6)*255/6),Math.round(i%6*255/5)]);
+  while(p.length<256)p.push([0,0,0]);
+  return p;
+}
+function quant(d,w,h,c){
+  const n=w*h,idx=new Uint8Array(n);
+  if(c.mode==='mono'){
+    const L=new Float32Array(n),adj=128-c.thr;
+    for(let p=0;p<n;p++){
+      const o=p*4,l=.299*d[o]+.587*d[o+1]+.114*d[o+2]+adj;
+      L[p]=l<0?0:l>255?255:l;
+    }
+    for(let y=0,p=0;y<h;y++)for(let x=0;x<w;x++,p++){
+      let on;
+      if(c.ds==='fs'){
+        const old=L[p];on=old>=128?1:0;
+        const err=old-on*255;
+        if(x<w-1)L[p+1]+=err*7/16;
+        if(y<h-1){
+          if(x>0)L[p+w-1]+=err*3/16;
+          L[p+w]+=err*5/16;
+          if(x<w-1)L[p+w+1]+=err/16;
+        }
+      }else if(c.ds==='ord')on=L[p]/255>BAYER[(y&3)*4+(x&3)]?1:0;
+      else on=L[p]>=128?1:0;
+      idx[p]=c.inv?1-on:on;
+    }
+    return idx;
+  }
+  for(let y=0,p=0;y<h;y++)for(let x=0;x<w;x++,p++){
+    const t=c.dith?BAYER[(y&3)*4+(x&3)]:.5,o=p*4;
+    if(c.mode==='gray'){
+      const l=.299*d[o]+.587*d[o+1]+.114*d[o+2];
+      idx[p]=Math.min(15,Math.floor(l/255*15+t));
+    }else{
+      const r=Math.min(5,Math.floor(d[o]/255*5+t));
+      const g=Math.min(6,Math.floor(d[o+1]/255*6+t));
+      const b=Math.min(5,Math.floor(d[o+2]/255*5+t));
+      idx[p]=r*42+g*6+b;
+    }
+  }
+  return idx;
+}
+function lzw(px,out,min){
+  const clr=1<<min,eoi=clr+1;
+  let size=min+1,next=eoi+1,cur=0,bits=0,dict=new Map(),bytes=[];
+  const emit=c=>{
+    cur|=c<<bits;bits+=size;
+    while(bits>=8){bytes.push(cur&255);cur>>>=8;bits-=8}
+    if(next>(1<<size)-1&&size<12)size++;
+  };
+  emit(clr);
+  let pre=px[0];
+  for(let i=1;i<px.length;i++){
+    const k=px[i],key=pre*256+k,f=dict.get(key);
+    if(f!==undefined){pre=f;continue}
+    emit(pre);
+    if(next<4096)dict.set(key,next++);
+    else{emit(clr);dict.clear();next=eoi+1;size=min+1}
+    pre=k;
+  }
+  emit(pre);emit(eoi);
+  if(bits>0)bytes.push(cur&255);
+  out.push(min);
+  for(let i=0;i<bytes.length;i+=255){
+    const chunk=bytes.slice(i,i+255);out.push(chunk.length,...chunk);
+  }
+  out.push(0);
+}
+function header(w,h,out,mode){
+  out.push(...'GIF89a'.split('').map(c=>c.charCodeAt(0)),w&255,w>>8,h&255,h>>8,0xF0|NB[mode],0,0);
+  for(const[r,g,b]of palette(mode))out.push(r,g,b);
+  out.push(0x21,0xFF,11,...'NETSCAPE2.0'.split('').map(c=>c.charCodeAt(0)),3,1,0,0,0);
+}
+function frame(px,w,h,delay,out,min){
+  out.push(0x21,0xF9,4,0,delay&255,delay>>8,0,0,0x2C,0,0,0,0,w&255,w>>8,h&255,h>>8,0);
+  lzw(px,out,min);
+}
+
+/* Live preview of the processed frame */
+const pc=$('pc'),pctx=pc.getContext('2d',{willReadFrequently:true});
+function preview(){
+  if(busy||!v.videoWidth)return;
+  cancelAnimationFrame(pvq);pvq=requestAnimationFrame(drawPreview);
+}
+function drawPreview(){
+  const{sw,sh,ow,oh}=dims(),c=cfg(),tn=$('gc').value.split(',').map(Number);
+  const pal=palette(c.mode).map(q=>c.mode==='color'?q:q.map((x,i)=>Math.round(x*tn[i]/255)));
+  const k=Math.max(1,Math.floor(360/ow));
+  pc.width=ow;pc.height=oh;pc.style.width=ow*k+'px';
+  $('grid').style.display=k>=3?'block':'none';$('grid').style.backgroundSize=k+'px '+k+'px';
+  $('cap').textContent=ow+'×'+oh+' OLED · '+({color:'color',gray:'16-shade gray',mono:'1-bit'})[c.mode];
+  drawFrame(pctx,crop.x*VW(),crop.y*VH(),sw,sh,ow,oh);
+  const src=pctx.getImageData(0,0,ow,oh),idx=quant(src.data,ow,oh,c),o=src.data;
+  for(let p=0;p<idx.length;p++){
+    const col=pal[idx[p]];o[p*4]=col[0];o[p*4+1]=col[1];o[p*4+2]=col[2];o[p*4+3]=255;
+  }
+  pctx.putImageData(src,0,0);
+}
+function modeUI(){
+  const m=cfg().mode;
+  $('mo').classList.toggle('hide',m!=='mono');
+  $('co').classList.toggle('hide',m==='mono');
+  $('gcw').classList.toggle('hide',m==='color');
+  $('mh').classList.toggle('hide',m==='mono');
+}
+document.querySelectorAll('input[name=cm]').forEach(r=>r.onchange=()=>{modeUI();upd()});
+['thr','ds','inv','dith'].forEach(id=>{$(id).addEventListener('input',upd);$(id).addEventListener('change',upd)});
+['seeked','timeupdate','loadeddata'].forEach(t=>v.addEventListener(t,preview));
+function seek(t){
+  return new Promise(r=>{
+    if(Math.abs(v.currentTime-t)<0.001)return r();
+    v.onseeked=()=>{v.onseeked=null;r()};v.currentTime=t;
+  });
+}
+
+$('go').onclick=async()=>{
+  const btn=$('go'),myGen=gen,lib=$('lib').value;
+  let name=($('nm').value||'anim').replace(/[^A-Za-z0-9_]/g,'_');if(/^\d/.test(name))name='_'+name;
+  btn.disabled=true;busy=true;btn.textContent='Generating…';
+  v.pause();
+  const fps=+$('fps').value,s=trim.s,e=trim.e;
+  const n=Math.min(300,Math.max(1,Math.floor((e-s)*fps)));
+  const{sw,sh,ow,oh}=dims();
+  const sx=crop.x*VW(),sy=crop.y*VH();
+  const cv=document.createElement('canvas');cv.width=ow;cv.height=oh;
+  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  const c=cfg(),min=MINC[c.mode],out=[],packed=[];header(ow,oh,out,c.mode);
+  const delay=Math.round(100/fps);
+  $('bar').classList.remove('hide');
+  try{
+    for(let i=0;i<n;i++){
+      await seek(Math.min(s+i/fps,v.duration-0.01));
+      drawFrame(ctx,sx,sy,sw,sh,ow,oh);
+      const d=ctx.getImageData(0,0,ow,oh).data;
+      const ix=quant(d,ow,oh,c);
+      if(c.mode==='mono')packed.push(pack(ix,ow,oh,lib==='u8g2'));
+      frame(ix,ow,oh,delay,out,min);
+      $('bi').style.width=((i+1)/n*100)+'%';
+      $('st').textContent=`Frame ${i+1} of ${n}`;
+      await new Promise(r=>setTimeout(r));
+    }
+    out.push(0x3B);
+    if(myGen!==gen)throw new Error('stale');
+    const blob=new Blob([new Uint8Array(out)],{type:'image/gif'});
+    if(gifUrl)URL.revokeObjectURL(gifUrl);
+    gifUrl=URL.createObjectURL(blob);gifBlob=blob;
+    $('out').style.width=ow*Math.max(1,Math.floor(360/ow))+'px';$('out').src=gifUrl;$('dl').href=gifUrl;
+    $('info').textContent=`GIF preview · ${ow}×${oh}px · ${n} frames · ${sz(blob.size)}`;
+    showCpp(c.mode==='mono'?{packed,ow,oh,delay,name,lib}:null);
+    $('res').classList.remove('hide');
+    $('st').textContent='Done.';
+    $('res').scrollIntoView({behavior:'smooth'});
+  }catch(err){
+    $('st').textContent=err.message==='stale'?'Settings changed, so that run was discarded. Press Generate code again.':'Something went wrong: '+err.message;
+  }
+  btn.disabled=false;busy=false;btn.textContent='Generate code';preview();
+};
+/* Trim timeline overlay on the video */
+const trk=$('trk');
+let tdrag=null;
+function tlUI(){
+  const d=v.duration||1,pct=t=>Math.min(1,Math.max(0,t/d))*100+'%';
+  $('rng').style.left=pct(trim.s);$('rng').style.width=(trim.e-trim.s)/d*100+'%';
+  $('ts').style.left=pct(trim.s);$('te').style.left=pct(trim.e);
+  $('ph').style.left=pct(v.currentTime);
+  $('tt').textContent=(trim.e-trim.s).toFixed(1)+'s';
+}
+function tmove(e){
+  const r=trk.getBoundingClientRect(),d=v.duration,gap=Math.min(0.1,d/2);
+  const t=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width))*d;
+  if(tdrag==='s')trim.s=Math.min(t,trim.e-gap);
+  else if(tdrag==='e')trim.e=Math.max(t,trim.s+gap);
+  v.currentTime=tdrag==='s'?trim.s:tdrag==='e'?trim.e:t;
+  if(tdrag!=='p')upd();
+}
+trk.addEventListener('pointerdown',e=>{
+  e.preventDefault();trk.setPointerCapture(e.pointerId);
+  tdrag=e.target.id==='ts'?'s':e.target.id==='te'?'e':'p';
+  tmove(e);
+});
+trk.addEventListener('pointermove',e=>{if(tdrag)tmove(e)});
+['pointerup','pointercancel'].forEach(t=>trk.addEventListener(t,()=>tdrag=null));
+$('pp').onclick=()=>{
+  if(v.paused){
+    if(v.currentTime<trim.s||v.currentTime>=trim.e-0.05)v.currentTime=trim.s;
+    v.play();
+  }else v.pause();
+};
+function tick(){
+  if(v.paused)return;
+  if(v.currentTime>=trim.e)v.currentTime=trim.s;
+  tlUI();requestAnimationFrame(tick);
+}
+v.addEventListener('play',()=>{$('pp').textContent='❚❚';tick()});
+v.addEventListener('pause',()=>{$('pp').textContent='▶'});
+v.addEventListener('ended',()=>{v.currentTime=trim.s;v.play()});
+['seeked','timeupdate'].forEach(t=>v.addEventListener(t,tlUI));
+
+/* C++ export (1-bit frames for Adafruit_GFX drawBitmap) */
+function pack(ix,w,h,lsb){
+  const bw=(w+7)>>3,o=new Uint8Array(bw*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(ix[y*w+x])o[y*bw+(x>>3)]|=lsb?1<<(x&7):0x80>>(x&7);
+  return o;
+}
+function showCpp(r){
+  const nb=$('cppn'),bx=$('cppb');
+  $('cc').classList.toggle('hide',!r);
+  if(!r){
+    nb.textContent='Code is only generated in Black & white mode. Switch the color mode above and press Generate code again.';
+    nb.classList.remove('hide');bx.classList.add('hide');return;
+  }
+  nb.classList.add('hide');bx.classList.remove('hide');
+  const hex=b=>'0x'+b.toString(16).padStart(2,'0'),n=r.packed.length;
+  const nm=r.name,NM=nm.toUpperCase(),xbm=r.lib==='u8g2';
+  let t=`// ${r.ow}x${r.oh} px, ${n} frames, 1-bit, ${xbm?'XBM (LSB first)':'MSB first'}, 1 = lit pixel\n// For ${xbm?'U8g2 drawXBMP()':'Adafruit_GFX drawBitmap()'}\n#define ${NM}_WIDTH ${r.ow}\n#define ${NM}_HEIGHT ${r.oh}\n#define ${NM}_FRAME_COUNT ${n}\n#define ${NM}_FRAME_DELAY_MS ${r.delay*10}\n\n`;
+  r.packed.forEach((f,i)=>{
+    const rows=[];
+    for(let j=0;j<f.length;j+=16)rows.push('  '+Array.from(f.slice(j,j+16),hex).join(', '));
+    t+=`const unsigned char ${nm}_frame_${i}[] PROGMEM = {\n${rows.join(',\n')}\n};\n\n`;
+  });
+  t+=`const unsigned char* const ${nm}_frames[] PROGMEM = {\n  ${r.packed.map((_,i)=>nm+'_frame_'+i).join(', ')}\n};\n\n`;
+  t+=xbm
+    ?`// Usage (U8g2):\n// for (int i = 0; i < ${NM}_FRAME_COUNT; i++) {\n//   u8g2.clearBuffer();\n//   u8g2.drawXBMP(0, 0, ${NM}_WIDTH, ${NM}_HEIGHT, (const uint8_t*)pgm_read_ptr(&${nm}_frames[i]));\n//   u8g2.sendBuffer();\n//   delay(${NM}_FRAME_DELAY_MS);\n// }\n`
+    :`// Usage (Adafruit_SSD1306):\n// for (int i = 0; i < ${NM}_FRAME_COUNT; i++) {\n//   display.clearDisplay();\n//   display.drawBitmap(0, 0, (const uint8_t*)pgm_read_ptr(&${nm}_frames[i]), ${NM}_WIDTH, ${NM}_HEIGHT, SSD1306_WHITE);\n//   display.display();\n//   delay(${NM}_FRAME_DELAY_MS);\n// }\n`;
+  $('ct').value=t;
+  $('cs').textContent=`${n} frames × ${r.packed[0].length} bytes = ${sz(n*r.packed[0].length)} of flash · ${t.split('\n').length} lines`;
+}
+$('cc').onclick=async()=>{
+  const ta=$('ct');let ok=true;
+  try{await navigator.clipboard.writeText(ta.value)}
+  catch{ta.focus();ta.select();try{ok=document.execCommand('copy')}catch{ok=false}}
+  $('cc').textContent=ok?'Copied!':'Press Ctrl/Cmd+C';
+  setTimeout(()=>$('cc').textContent='Copy code',1800);
+};
+
+/* GIF download through the viewer's download capability (plain links are inert here) */
+let dls=null;
+try{window.claude&&claude.use('downloads').then(d=>dls=d).catch(()=>{})}catch{}
+$('dl').onclick=e=>{
+  if(!dls||!gifBlob)return;
+  e.preventDefault();
+  dls.save({filename:'clip.gif',data:gifBlob}).catch(()=>{});
+};
+/* Any change to an option discards the last result */
+function invalidate(){
+  gen++;
+  if(busy)return;
+  $('res').classList.add('hide');$('bar').classList.add('hide');$('st').textContent='';
+}
+$('gc').addEventListener('change',preview);
+modeUI();
+/* Rotation: the video is rotated with CSS for display and with a canvas transform for export */
+function VW(){return rot%180?v.videoHeight:v.videoWidth}
+function VH(){return rot%180?v.videoWidth:v.videoHeight}
+function layoutStage(){
+  if(!v.videoWidth)return;
+  const maxW=stage.parentElement.clientWidth-32,maxH=innerHeight*0.5;
+  const RW=VW(),RH=VH(),k=Math.min(1,maxW/RW,maxH/RH);
+  stage.style.width=RW*k+'px';stage.style.height=RH*k+'px';
+  v.style.width=v.videoWidth*k+'px';v.style.height=v.videoHeight*k+'px';
+  v.style.transform='translate(-50%,-50%) rotate('+rot+'deg)';
+}
+function drawFrame(ctx,sx,sy,sw,sh,ow,oh){
+  const RW=VW(),RH=VH();
+  ctx.save();
+  ctx.scale(ow/sw,oh/sh);ctx.translate(-sx,-sy);
+  if(rot===90){ctx.translate(RW,0);ctx.rotate(Math.PI/2)}
+  else if(rot===180){ctx.translate(RW,RH);ctx.rotate(Math.PI)}
+  else if(rot===270){ctx.translate(0,RH);ctx.rotate(-Math.PI/2)}
+  ctx.drawImage(v,0,0);
+  ctx.restore();
+}
+$('rot').onclick=()=>{
+  rot=(rot+90)%360;$('ra').textContent=rot+'°';
+  crop={x:0,y:0,w:1,h:1};
+  layoutStage();setAR();
+};
+addEventListener('resize',layoutStage);
+</script>
+</body>
+</html>
