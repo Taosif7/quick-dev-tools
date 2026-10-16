@@ -137,11 +137,13 @@ img#out{max-width:100%;border-radius:8px;display:block;margin:8px auto;image-ren
     <h2 class="h">3 · Code</h2>
     <div class="row">
       <div><label>Frame rate</label><select id="fps" style="width:100%"><option value="10">10 fps</option><option value="12">12 fps</option><option value="15">15 fps</option><option value="20">20 fps</option><option value="24" selected>24 fps</option><option value="30">30 fps</option></select></div>
+      <div><label>Delay between frames</label><select id="dly" style="width:100%"><option value="auto" selected>Auto (matches frame rate)</option><option value="20">20 ms</option><option value="30">30 ms</option><option value="40">40 ms</option><option value="50">50 ms</option><option value="60">60 ms</option><option value="80">80 ms</option><option value="100">100 ms</option><option value="125">125 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="250">250 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="1000">1000 ms</option></select></div>
       <div><label>Library</label><select id="lib" style="width:100%"><option value="adafruit">Adafruit GFX (drawBitmap)</option><option value="u8g2">U8g2 (drawXBMP)</option></select></div>
       <div><label>Variable name</label><input id="nm" type="text" value="anim" maxlength="24" style="width:100%" spellcheck="false" autocapitalize="off"></div>
       <div id="ww" class="hide"><label>Output width (free size)</label><select id="w" style="width:100%"><option value="64">64 px</option><option value="96">96 px</option><option value="128" selected>128 px</option><option value="160">160 px</option><option value="192">192 px</option><option value="240">240 px</option><option value="320">320 px</option></select></div>
     </div>
-    <p class="note" id="est" style="margin:12px 0 0"></p>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="lim" checked> Limit to 300 frames <span class="note">(uncheck for no limit; very long clips get slow and large)</span></label>
+    <p class="note" id="est" style="margin:8px 0 0"></p>
     <div class="tools"><button class="pri" id="go" style="width:100%;padding:12px;font-size:16px">Generate code</button></div>
     <div class="bar hide" id="bar"><i id="bi"></i></div>
     <p class="note" id="st" style="margin:8px 0 0"></p>
@@ -203,10 +205,11 @@ function upd(){
   if(!v.videoWidth)return;
   const{ow,oh}=dims();
   const n=Math.max(0,Math.floor((e-s)*$('fps').value));
-  $('est').textContent=`Trim ${s.toFixed(1)}–${e.toFixed(1)}s · ${Math.min(n,300)} frames · ${ow}×${oh}px · `+(cfg().mode==='mono'?`~${sz(Math.min(n,300)*((ow+7)>>3)*oh)} of flash`:'code needs Black & white mode')+(n>300?' · capped at 300 frames':'');
+  const lim=$('lim').checked,fr=lim?Math.min(n,300):n;
+  $('est').textContent=`Trim ${s.toFixed(1)}–${e.toFixed(1)}s · ${fr} frames · ${ow}×${oh}px · `+(cfg().mode==='mono'?`~${sz(fr*((ow+7)>>3)*oh)} of flash`:'code needs Black & white mode')+` · plays for ${(fr*delayMs()/1000).toFixed(1)}s`+(lim&&n>300?' · capped at 300 frames':'');
   preview();
 }
-['fps','w','lib','nm'].forEach(id=>$(id).oninput=upd);
+['fps','dly','lim','w','lib','nm'].forEach(id=>$(id).oninput=upd);
 $('full').onclick=()=>{crop={x:0,y:0,w:1,h:1};setAR();drawCrop()};
 function setAR(){
   const val=$('ar').value;
@@ -395,13 +398,13 @@ $('go').onclick=async()=>{
   btn.disabled=true;busy=true;btn.textContent='Generating…';
   v.pause();
   const fps=+$('fps').value,s=trim.s,e=trim.e;
-  const n=Math.min(300,Math.max(1,Math.floor((e-s)*fps)));
+  const n=Math.min($('lim').checked?300:Infinity,Math.max(1,Math.floor((e-s)*fps)));
   const{sw,sh,ow,oh}=dims();
   const sx=crop.x*VW(),sy=crop.y*VH();
   const cv=document.createElement('canvas');cv.width=ow;cv.height=oh;
   const ctx=cv.getContext('2d',{willReadFrequently:true});
   const c=cfg(),min=MINC[c.mode],out=[],packed=[];header(ow,oh,out,c.mode);
-  const delay=Math.round(100/fps);
+  const ms=delayMs(),delay=Math.max(2,Math.round(ms/10));
   $('bar').classList.remove('hide');
   try{
     for(let i=0;i<n;i++){
@@ -422,7 +425,7 @@ $('go').onclick=async()=>{
     gifUrl=URL.createObjectURL(blob);gifBlob=blob;
     $('out').style.width=ow*Math.max(1,Math.floor(360/ow))+'px';$('out').src=gifUrl;$('dl').href=gifUrl;
     $('info').textContent=`GIF preview · ${ow}×${oh}px · ${n} frames · ${sz(blob.size)}`;
-    showCpp(c.mode==='mono'?{packed,ow,oh,delay,name,lib}:null);
+    showCpp(c.mode==='mono'?{packed,ow,oh,ms,name,lib}:null);
     $('res').classList.remove('hide');
     $('st').textContent='Done.';
     $('res').scrollIntoView({behavior:'smooth'});
@@ -488,7 +491,7 @@ function showCpp(r){
   nb.classList.add('hide');bx.classList.remove('hide');
   const hex=b=>'0x'+b.toString(16).padStart(2,'0'),n=r.packed.length;
   const nm=r.name,NM=nm.toUpperCase(),xbm=r.lib==='u8g2';cppName=nm;
-  let t=`// ${r.ow}x${r.oh} px, ${n} frames, 1-bit, ${xbm?'XBM (LSB first)':'MSB first'}, 1 = lit pixel\n// For ${xbm?'U8g2 drawXBMP()':'Adafruit_GFX drawBitmap()'}\n#define ${NM}_WIDTH ${r.ow}\n#define ${NM}_HEIGHT ${r.oh}\n#define ${NM}_FRAME_COUNT ${n}\n#define ${NM}_FRAME_DELAY_MS ${r.delay*10}\n\n`;
+  let t=`// ${r.ow}x${r.oh} px, ${n} frames, 1-bit, ${xbm?'XBM (LSB first)':'MSB first'}, 1 = lit pixel\n// For ${xbm?'U8g2 drawXBMP()':'Adafruit_GFX drawBitmap()'}\n#define ${NM}_WIDTH ${r.ow}\n#define ${NM}_HEIGHT ${r.oh}\n#define ${NM}_FRAME_COUNT ${n}\n#define ${NM}_FRAME_DELAY_MS ${r.ms}\n\n`;
   r.packed.forEach((f,i)=>{
     const rows=[];
     for(let j=0;j<f.length;j+=16)rows.push('  '+Array.from(f.slice(j,j+16),hex).join(', '));
@@ -568,6 +571,8 @@ $('rot').onclick=()=>{
   layoutStage();setAR();
 };
 addEventListener('resize',layoutStage);
+/* Delay between frames: explicit choice, or derived from the frame rate */
+function delayMs(){const d=$('dly').value;return d==='auto'?Math.round(1000/+$('fps').value):+d}
 </script>
 </body>
 </html>
