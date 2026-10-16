@@ -137,7 +137,7 @@ img#out{max-width:100%;border-radius:8px;display:block;margin:8px auto;image-ren
     <h2 class="h">3 · Code</h2>
     <div class="row">
       <div><label>Frame rate</label><select id="fps" style="width:100%"><option value="10">10 fps</option><option value="12">12 fps</option><option value="15">15 fps</option><option value="20">20 fps</option><option value="24" selected>24 fps</option><option value="30">30 fps</option></select></div>
-      <div><label>Delay between frames</label><select id="dly" style="width:100%"><option value="auto" selected>Auto (matches frame rate)</option><option value="20">20 ms</option><option value="30">30 ms</option><option value="40">40 ms</option><option value="50">50 ms</option><option value="60">60 ms</option><option value="80">80 ms</option><option value="100">100 ms</option><option value="125">125 ms</option><option value="150">150 ms</option><option value="200">200 ms</option><option value="250">250 ms</option><option value="300">300 ms</option><option value="500">500 ms</option><option value="1000">1000 ms</option></select></div>
+      <div><label>Delay between frames (ms)</label><input id="dly" type="text" inputmode="numeric" value="42" placeholder="0" maxlength="5" autocomplete="off" style="width:100%"><span class="note">Set from frame rate; edit freely. Empty = 0.</span></div>
       <div><label>Library</label><select id="lib" style="width:100%"><option value="adafruit">Adafruit GFX (drawBitmap)</option><option value="u8g2">U8g2 (drawXBMP)</option></select></div>
       <div><label>Variable name</label><input id="nm" type="text" value="anim" maxlength="24" style="width:100%" spellcheck="false" autocapitalize="off"></div>
       <div id="ww" class="hide"><label>Output width (free size)</label><select id="w" style="width:100%"><option value="64">64 px</option><option value="96">96 px</option><option value="128" selected>128 px</option><option value="160">160 px</option><option value="192">192 px</option><option value="240">240 px</option><option value="320">320 px</option></select></div>
@@ -572,7 +572,10 @@ $('rot').onclick=()=>{
 };
 addEventListener('resize',layoutStage);
 /* Delay between frames: explicit choice, or derived from the frame rate */
-function delayMs(){const d=$('dly').value;return d==='auto'?Math.round(1000/+$('fps').value):+d}
+function delayMs(){const d=parseInt($('dly').value,10);return d>0?d:0}
+/* Changing the frame rate refills the delay; the delay field accepts digits only */
+$('fps').oninput=()=>{$('dly').value=Math.round(1000/+$('fps').value);upd()};
+$('dly').oninput=()=>{$('dly').value=$('dly').value.replace(/\D/g,'');upd()};
 </script>
 </body>
 </html>
